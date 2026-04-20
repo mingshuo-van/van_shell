@@ -1,16 +1,8 @@
 import os
 import sys
-import re
 
 work_dir = ''
 scope = {}
-
-comma = re.compile(r'(?<!\\),')
-colon = re.compile(r'(?<!\\):')
-backslash_backslash = re.compile(r'\\\\')
-backslash_comma = re.compile(r'\\,')
-backslash_colon = re.compile(r'\\:')
-variable = re.compile(r'(?<!\{)\{.*(?:(?<!\[)\[.*](?!]))?}(?!})')
 
 
 def getVariable(s: str, left_ch: str, right_ch: str):
