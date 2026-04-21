@@ -341,6 +341,7 @@ def hist(order):
 def reo(order):
     idx = int(order[4:])
     run(orders[idx])
+    orders.append(orders[idx])
 
 
 def run(order):
@@ -362,6 +363,7 @@ def run(order):
     elif order.startswith('hist'):
         hist(order)
     elif order.startswith('reo'):
+        orders.pop()
         reo(order)
     else:
         orders.pop()
