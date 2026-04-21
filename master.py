@@ -5,20 +5,18 @@ work_dir = ''
 scope = {}
 
 
-def getVariable(s: str, left_ch: str, right_ch: str):
+def get_variable(s: str, left_ch: str, right_ch: str):
     v = []
     n = 0
     left = 0
     for i, ch in enumerate(s):
         if ch == left_ch:
-            if i > 0 and s[i - 1] == '\\':
-                n -= 1
-            elif n == 0:
+            if n == 0:
                 left = i
             n += 1
         elif ch == right_ch:
             n -= 1
-            if n == 0:
+            if n == 0 and (left == 0 or (s[left - 1] != '\\')):
                 v.append((left, i + 1))
     return v
 
@@ -147,30 +145,30 @@ def calc(s: str):
 
 
 def calc_order(order):
-    v = getVariable(order, '(', ')')
+    v = get_variable(order, '(', ')')
     if not v:
-        if getVariable(order, '{', '}'):
+        if get_variable(order, '{', '}'):
             order = replace_variable(order)
         return order
     res = order
     for s, e in reversed(v):
         t = order[s:e]
-        if getVariable(t, '{', '}'):
+        if get_variable(t, '{', '}'):
             t = replace_variable(t)
         res = res[:s] + str(calc(t)) + res[e:]
     return res
 
 
 def replace_variable(order):
-    v = getVariable(order, '{', '}')
+    v = get_variable(order, '{', '}')
     if not v:
-        if getVariable(order, '(', ')'):
+        if get_variable(order, '(', ')'):
             order = calc_order(order)
         return replace_variable_only(order)
     res = order
     for s, e in reversed(v):
         t = order[s + 1:e - 1].strip()
-        if getVariable(t, '(', ')'):
+        if get_variable(t, '(', ')'):
             t = calc_order(t)
         res = res[:s] + replace_variable_only(replace_variable(t)) + res[e:]
     return calc_order(res)
