@@ -392,12 +392,35 @@ def reo(order):
     orders.append(orders[idx])
 
 
+def run_if(work):
+    print(work)
+
+
+def parse_if(order):
+    arr = []
+    if not order.endswith('endif'):
+        arr.append(order)
+        cur = ''
+        while cur != 'endif':
+            cur = input().strip()
+            arr.append(cur)
+        work = ';'.join(arr)
+    else:
+        work = order
+    orders.append(work)
+    run_if(work)
+
+
 def run(order):
-    try:
-        order = replace_variable(order)
-    except Exception as e:
-        print('error')
-        print(str(e))
+    orders.append(order)
+    if order.startswith('if'):
+        pass
+    else:
+        try:
+            order = replace_variable(order)
+        except Exception as e:
+            print('error')
+            print(str(e))
     if order in sample_order:
         sample_order[order]()
     elif order.startswith('set'):
@@ -413,6 +436,10 @@ def run(order):
     elif order.startswith('reo'):
         orders.pop()
         reo(order)
+    elif order.startswith('if'):
+        if not order.endswith('endif'):
+            orders.pop()
+        parse_if(order)
     else:
         orders.pop()
         raise NameError('please enter right order')
@@ -425,7 +452,6 @@ while True:
         files.append(work_dir)
     print(work_dir, end='>')
     order = input().strip()
-    orders.append(order)
     if order == '':
         continue
     try:
