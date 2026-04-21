@@ -93,6 +93,7 @@ func_operand = {
 def calc(s: str):
     if not check_couple('(', ')', s):
         raise ValueError('the counts of ( must equals with the counts of )')
+    s = s.replace('True', '1').replace('False', '0')
     output = []
     operator = []
     expect_operand = True
@@ -306,7 +307,15 @@ def echo(order):
     print(transform(order[5:]))
 
 
-cast = {'int': int, 'float': float, 'str': str, 'dict': get_dict, 'list': get_list}
+def get_bool(s: str):
+    try:
+        s = int(s)
+    except:
+        return bool(s)
+    return bool(s)
+
+
+cast = {'int': int, 'float': float, 'str': str, 'dict': get_dict, 'list': get_list, 'bool': get_bool}
 
 
 def parse_set(order: str):
