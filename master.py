@@ -291,7 +291,7 @@ help = (
     'sample_order: exit->turn off this program\tscope->see all variable\thelp->get help\tls->show files\twds->show work_dir\n'
     'other_order: echo <content>->print something\t'
     'set <name> <type> <value>->create new variable\tpush <address>->enter a new work_dir\tpop->return last work_dir\t'
-    'hist [num]->show all orders that has entered or only nearest num counts\t'
+    'hist [num]->show all orders that have entered or only nearest num counts\t'
     'reo <num>-> re call order that index is num in hist (negative num is ok,as python list)\n'
     'introduction_of_variable: int , float ,str , dict , list is OK.\t'
     'You can vis variable by the form like {var}.\t'
@@ -302,10 +302,12 @@ help = (
     'To get -4 , you have to enter -(2^2).\t'
     'Dict and List ONLY HAVE one Dimension.\t'
     'You can vis it\'s element by [].\t'
-    'The form list {arr[{var1}]} or {arr[({num1}+{num2})]} is OK.\t'
-    'What I cannot but emphasize is that if you want to use reo <negative num> to recall something,you must notice that '
-    'the sentence you just entered also will be record in hist. For example , if you want to recall the last sentence that you '
-    'used , don\'t enter reo -1 but reo -2. Otherwise , the program won\'t  stop recursive until stack overflow!\t'
+    'The form list {arr[{var1}]} or {arr[({num1}+{num2})]} is OK.\n'
+    'Something that you should notice when you work: Keep in mind that if you want to use reo <num> to recall something , '
+    'you must notice that the sentence you just entered won\'t be record in hist.\t The sentence that you actually recalled will be'
+    'record in hist.\t And if you use reo <negative num> , you can freely use it if not out of range of list.\t'
+    'You don\'t need to worry about the question of off by one when use negative index , because the sentence you just '
+    'used will be put into hist after worked.\n'
     'Hoping you have a lucky experience!\n')
 
 files = []
