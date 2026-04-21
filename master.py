@@ -21,7 +21,7 @@ def get_variable(s: str, left_ch: str, right_ch: str):
                     v.append((left, i + 1))
                 else:
                     sub = 1
-                    while i - sub >= 0 and s[i - sub] == '\\':
+                    while left - sub >= 0 and s[left - sub] == '\\':
                         sub += 1
                     if sub & 1:
                         v.append((left, i + 1))
