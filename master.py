@@ -137,6 +137,9 @@ def calc(s: str):
                         operator_ch += s[index]
                     elif operator_ch == '=':
                         raise ValueError('= must be ==')
+                if operator_ch in {'&', '|'}:
+                    if s[index + 1] == '&' or s[index + 1] == '|':
+                        index += 1
             if len(operator) == 0:
                 operator.append(operator_ch)
             else:
