@@ -44,9 +44,12 @@ def replace_variable_only(s: str):
     return s
 
 
-prior = {'(': 0, ')': 0, '+': 1, '-': 1, '*': 2, '/': 2, '%': 2, '^': 3, '~': 4}
+prior = {'(': 0, ')': 0, '+': 1, '-': 1, '*': 2, '/': 2, '%': 2, '^': 3, '~': 4, '>': 0.7, '<': 0.7, '==': 0.7,
+         '<=': 0.7, '>=': 0.7, '&': 0.5, '|': 0.5, '!': 4}
 
-lr = {'+': 'left', '-': 'left', '*': 'left', '/': 'left', '%': 'left', '^': 'right', '~': 'right'}
+lr = {'+': 'left', '-': 'left', '*': 'left', '/': 'left', '%': 'left', '^': 'right', '~': 'right', '>': 'left',
+      '<': 'left', '==': 'left', '>=': 'left', '<=': 'left', '&': 'left', '|': 'left', '!': 'right',
+      '=': 'this is not a bug'}
 
 
 def check_couple(left: str, right: str, s: str):
@@ -69,7 +72,14 @@ func_operand = {
     '*': lambda left, right: left * right,
     '/': lambda left, right: left / right if right != 0 else float('nan'),
     '%': lambda left, right: left % right,
-    '^': lambda left, right: left ** right
+    '^': lambda left, right: left ** right,
+    '>': lambda left, right: left > right,
+    '<': lambda left, right: left < right,
+    '>=': lambda left, right: left >= right,
+    '<=': lambda left, right: left <= right,
+    '==': lambda left, right: left == right,
+    '&': lambda left, right: left and right,
+    '|': lambda left, right: left or right
 }
 
 
@@ -107,15 +117,28 @@ def calc(s: str):
             output.append(float(''.join(num)))
             expect_operand = False
         elif s[index] in lr:
+            operator_ch = s[index]
+            if index + 1 < size:
+                if operator_ch in {'<', '=', '>'}:
+                    while index + 1 < size and s[index + 1] == ' ':
+                        index += 1
+                    if index + 1 >= size:
+                        raise ValueError(f'in front of {operator_ch} still need a new operator')
+                    if s[index + 1] == '=':
+                        index += 1
+                        operator_ch += s[index]
+                    elif operator_ch == '=':
+                        raise ValueError('= must be ==')
             if len(operator) == 0:
-                operator.append(s[index])
+                operator.append(operator_ch)
             else:
                 op = operator[-1]
                 if expect_operand and s[index] == '-':
                     ch = '~'
                 else:
-                    ch = s[index]
+                    ch = operator_ch
                     expect_operand = True
+                print(ch)
                 while prior[op] > prior[ch] or (prior[op] == prior[ch] and lr[ch] == 'left'):
                     output.append(op)
                     operator.pop()
@@ -136,6 +159,9 @@ def calc(s: str):
             if token == '~':
                 cur = stack.pop()
                 stack.append(-cur)
+            elif token == '!':
+                cur = stack.pop()
+                stack.append(float(not cur))
             else:
                 right = stack.pop()
                 left = stack.pop()
