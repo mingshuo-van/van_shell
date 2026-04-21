@@ -409,10 +409,13 @@ def get_if(order):
     arr = []
     if not order.endswith('endif'):
         arr.append(order)
-        cur = ''
-        while cur != 'endif':
+        count = 0
+        limit = 1
+        while count != limit:
             cur = input().strip()
             arr.append(cur)
+            count += cur == 'endif'
+            limit += cur == 'if'
         work = ';'.join(arr)
         orders.append(work)
     else:
@@ -420,12 +423,41 @@ def get_if(order):
     run_if(work)
 
 
+def run_while(work):
+    global record
+    arr = work.split(';')
+    ok = arr[0][5:].strip()
+    while replace_variable(ok) != '0':
+        record = False
+        for i in range(1, len(arr) - 1):
+            run(arr[i])
+    record = True
+
+
+def get_while(order):
+    arr = []
+    if not order.endswith('endwhile'):
+        arr.append(order)
+        count = 0
+        limit = 1
+        while count != limit:
+            cur = input().strip()
+            arr.append(cur)
+            count += cur == 'endwhile'
+            limit += cur == 'while'
+        work = ';'.join(arr)
+        orders.append(work)
+    else:
+        work = order
+    run_while(work)
+
+
 def run(order):
     if order == '':
         return
     if record:
         orders.append(order)
-    if order.startswith('if'):
+    if order.startswith('if') or order.startswith('while'):
         pass
     else:
         try:
@@ -454,6 +486,11 @@ def run(order):
             if record:
                 orders.pop()
         get_if(order)
+    elif order.startswith('while'):
+        if not order.endswith('endwhile'):
+            if record:
+                orders.pop()
+        get_while(order)
     else:
         if record:
             orders.pop()
