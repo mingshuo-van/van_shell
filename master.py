@@ -386,17 +386,26 @@ def hist(order):
         print(res)
 
 
+record = True
+
+
 def reo(order):
     idx = int(order[4:])
     run(orders[idx])
-    orders.append(orders[idx])
 
 
 def run_if(work):
-    print(work)
+    global record
+    arr = work.split(';')
+    ok = arr[0][2:].strip()
+    if replace_variable(ok) != '0':
+        record = False
+        for i in range(1, len(arr) - 1):
+            run(arr[i])
+        record = True
 
 
-def parse_if(order):
+def get_if(order):
     arr = []
     if not order.endswith('endif'):
         arr.append(order)
@@ -405,14 +414,17 @@ def parse_if(order):
             cur = input().strip()
             arr.append(cur)
         work = ';'.join(arr)
+        orders.append(work)
     else:
         work = order
-    orders.append(work)
     run_if(work)
 
 
 def run(order):
-    orders.append(order)
+    if order == '':
+        return
+    if record:
+        orders.append(order)
     if order.startswith('if'):
         pass
     else:
@@ -434,14 +446,17 @@ def run(order):
     elif order.startswith('hist'):
         hist(order)
     elif order.startswith('reo'):
-        orders.pop()
+        if record:
+            orders.pop()
         reo(order)
     elif order.startswith('if'):
         if not order.endswith('endif'):
-            orders.pop()
-        parse_if(order)
+            if record:
+                orders.pop()
+        get_if(order)
     else:
-        orders.pop()
+        if record:
+            orders.pop()
         raise NameError('please enter right order')
 
 
