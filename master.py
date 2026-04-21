@@ -138,6 +138,8 @@ def calc(s: str):
                     elif operator_ch == '=':
                         raise ValueError('= must be ==')
                 if operator_ch in {'&', '|'}:
+                    while index + 1 < size and s[index + 1] == ' ':
+                        index += 1
                     if s[index + 1] == '&' or s[index + 1] == '|':
                         index += 1
             if len(operator) == 0:
