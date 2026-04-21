@@ -45,7 +45,7 @@ def replace_variable_only(s: str):
 
 
 prior = {'(': 0, ')': 0, '+': 1, '-': 1, '*': 2, '/': 2, '%': 2, '^': 3, '~': 4, '>': 0.7, '<': 0.7, '==': 0.7,
-         '<=': 0.7, '>=': 0.7, '&': 0.5, '|': 0.5, '!': 4}
+         '<=': 0.7, '>=': 0.7, '&': 0.6, '|': 0.5, '!': 4}
 
 lr = {'+': 'left', '-': 'left', '*': 'left', '/': 'left', '%': 'left', '^': 'right', '~': 'right', '>': 'left',
       '<': 'left', '==': 'left', '>=': 'left', '<=': 'left', '&': 'left', '|': 'left', '!': 'right',
@@ -138,7 +138,6 @@ def calc(s: str):
                 else:
                     ch = operator_ch
                     expect_operand = True
-                print(ch)
                 while prior[op] > prior[ch] or (prior[op] == prior[ch] and lr[ch] == 'left'):
                     output.append(op)
                     operator.pop()
