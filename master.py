@@ -199,12 +199,18 @@ def transform(s: str, target: str = None):
 
 def get_dict(s: str):
     idx = []
+    jmp = False
+    size = len(s)
     for i, ch in enumerate(s):
+        if jmp:
+            jmp = False
+            continue
+        if ch == '\\':
+            if i + 1 >= size:
+                raise ValueError('in front of \\ be a operator')
+            jmp = True
         if ch == ',':
-            if i == 0:
-                idx.append(i)
-            elif s[i - 1] != '\\':
-                idx.append(i)
+            idx.append(i)
     t = []
     last = 0
     for i in idx:
@@ -215,15 +221,18 @@ def get_dict(s: str):
     idx = []
     for i in t:
         size = len(i)
-        j = 0
         idx.append([])
-        while j < size:
-            if i[j] == ':':
-                if j == 0:
-                    idx[-1].append(j)
-                elif i[j - 1] != '\\':
-                    idx[-1].append(j)
-            j += 1
+        jmp = False
+        for j, ch in enumerate(i):
+            if jmp:
+                jmp = False
+                continue
+            if ch == '\\':
+                if j + 1 >= size:
+                    raise ValueError('in front of \\ be a operator')
+                jmp = True
+            if ch == ':':
+                idx[-1].append(j)
     arr = []
     for i, j in enumerate(idx):
         arr.append([])
