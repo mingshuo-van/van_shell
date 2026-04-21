@@ -16,8 +16,15 @@ def get_variable(s: str, left_ch: str, right_ch: str):
             n += 1
         elif ch == right_ch:
             n -= 1
-            if n == 0 and (left == 0 or (s[left - 1] != '\\')):
-                v.append((left, i + 1))
+            if n == 0:
+                if left == 0:
+                    v.append((left, i + 1))
+                else:
+                    sub = 1
+                    while i - sub >= 0 and s[i - sub] == '\\':
+                        sub += 1
+                    if sub & 1:
+                        v.append((left, i + 1))
     return v
 
 
