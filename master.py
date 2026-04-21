@@ -238,12 +238,19 @@ def get_dict(s: str):
 
 def get_list(s: str):
     idx = []
+    size = len(s)
+    jmp = False
     for i, ch in enumerate(s):
+        if jmp:
+            jmp = False
+            continue
+        if ch == '\\':
+            if i + 1 >= size:
+                raise ValueError('in front of \\ must be a operator')
+            jmp = True
         if ch == ',':
-            if i == 0:
-                idx.append(i)
-            elif s[i - 1] != '\\':
-                idx.append(i)
+            idx.append(i)
+
     t = []
     last = 0
     for i in idx:
@@ -255,7 +262,7 @@ def get_list(s: str):
 
 
 def echo(order):
-    print(order[5:])
+    print(transform(order[5:]))
 
 
 cast = {'int': int, 'float': float, 'str': str, 'dict': get_dict, 'list': get_list}
