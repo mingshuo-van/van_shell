@@ -292,7 +292,7 @@ help = (
     'What I cannot but emphasize is that if you want to use reo <negative num> to recall something,you must notice that '
     'the sentence you just entered also will be record in hist. For example , if you want to recall the last sentence that you '
     'used , don\'t enter reo -1 but reo -2. Otherwise , the program won\'t  stop recursive until stack overflow!\t'
-    'Hoping you have a lucky experiences!\n')
+    'Hoping you have a lucky experience!\n')
 
 files = []
 
