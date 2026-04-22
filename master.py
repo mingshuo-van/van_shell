@@ -429,6 +429,25 @@ def run_if(work):
                     record = True
                     raise ValueError('if and endif must equal')
                 statement = ';'.join(inner_if)
+            elif statement.startswith('while'):
+                count = 0
+                inner_while = []
+                success = False
+                for j in range(i, len(arr) - 1):
+                    if arr[j].startswith('while'):
+                        count += 1
+                    elif arr[j].startswith('endwhile'):
+                        count -= 1
+                    if not count:
+                        success = True
+                        for k in range(i, j + 1):
+                            inner_while.append(arr[k])
+                        jmp = j - i
+                        break
+                if not success:
+                    record = True
+                    raise ValueError('if and endif must equal')
+                statement = ';'.join(inner_while)
             run(statement)
         record = True
 
@@ -480,8 +499,28 @@ def run_while(work):
                         jmp = j - i
                         break
                 if not success:
+                    record = True
                     raise ValueError('if and endif must equal')
                 statement = ';'.join(inner_while)
+            elif statement.startswith('if'):
+                count = 0
+                inner_if = []
+                success = False
+                for j in range(i, len(arr) - 1):
+                    if arr[j].startswith('if'):
+                        count += 1
+                    elif arr[j].startswith('endif'):
+                        count -= 1
+                    if not count:
+                        success = True
+                        for k in range(i, j + 1):
+                            inner_if.append(arr[k])
+                        jmp = j - i
+                        break
+                if not success:
+                    record = True
+                    raise ValueError('if and endif must equal')
+                statement = ';'.join(inner_if)
             run(statement)
     record = True
 
