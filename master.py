@@ -23,7 +23,7 @@ def stackpush(order):
         stack.append(var)
 
 
-def stackout(order):
+def stackout():
     if len(stack) > 0:
         stack.pop()
 
@@ -35,7 +35,7 @@ def stackpeek(order):
     scope[var] = stack[-1]
 
 
-stack_order = {'stackpop': stackpop, 'stackpush': stackpush, 'stackout': stackout, 'stackpeek': stackpeek}
+stack_order = {'stackpop': stackpop, 'stackpush': stackpush, 'stackout': lambda x: stackout(), 'stackpeek': stackpeek}
 
 
 def get_variable(s: str, left_ch: str, right_ch: str):
