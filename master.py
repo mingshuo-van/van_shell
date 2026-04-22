@@ -562,6 +562,26 @@ def inc(order, num: int):
         raise e
 
 
+def inner_append(order, kind: str):
+    if kind == 'list':
+        s = order[10:].strip()
+        name, content = s.split(maxsplit=1)
+        t = special_split(content, ',')
+        if name in scope and isinstance(scope[name], list):
+            scope[name].extend(t)
+        else:
+            scope[name] = t
+    elif kind == 'dict':
+        s = order[10:].strip()
+        name, content = s.split(maxsplit=1)
+        t = [special_split(i, ':') for i in special_split(content, ',')]
+        if name in scope and isinstance(scope[name], dict):
+            for i in t:
+                scope[name][i[0]] = i[1]
+        else:
+            scope[name] = {i[0]: i[1] for i in t}
+
+
 def run(order):
     if order == '':
         return
@@ -605,6 +625,10 @@ def run(order):
         inc(order, 1)
     elif order.startswith('dec'):
         inc(order, -1)
+    elif order.startswith('appendlist'):
+        inner_append(order, 'list')
+    elif order.startswith('appenddict'):
+        inner_append(order, 'dict')
     else:
         if record:
             orders.pop()
