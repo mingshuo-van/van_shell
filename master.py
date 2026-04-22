@@ -455,10 +455,34 @@ def run_while(work):
     global record
     arr = work.split(';')
     ok = arr[0][5:].strip()
+    arr = list(map(lambda x: x.strip(), arr))
     while replace_variable(ok) != '0':
-        record = False
+        jmp = 0
         for i in range(1, len(arr) - 1):
-            run(arr[i])
+            if jmp:
+                jmp -= 1
+                continue
+            record = False
+            statement = arr[i]
+            if statement.startswith('while'):
+                count = 0
+                inner_while = []
+                success = False
+                for j in range(i, len(arr) - 1):
+                    if arr[j].startswith('while'):
+                        count += 1
+                    elif arr[j].startswith('endwhile'):
+                        count -= 1
+                    if not count:
+                        success = True
+                        for k in range(i, j + 1):
+                            inner_while.append(arr[k])
+                        jmp = j - i
+                        break
+                if not success:
+                    raise ValueError('if and endif must equal')
+                statement = ';'.join(inner_while)
+            run(statement)
     record = True
 
 
@@ -471,8 +495,8 @@ def get_while(order):
         while count != limit:
             cur = input().strip()
             arr.append(cur)
-            count += cur == 'endwhile'
-            limit += cur == 'while'
+            count += cur.startswith('endwhile')
+            limit += cur.startswith('while')
         work = ';'.join(arr)
         orders.append(work)
     else:
