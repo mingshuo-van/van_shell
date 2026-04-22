@@ -582,6 +582,17 @@ def inner_append(order, kind: str):
             scope[name] = {i[0]: i[1] for i in t}
 
 
+def get_len(order):
+    s = order[3:].strip()
+    origin, res = s.split(maxsplit=1)
+    if origin not in scope:
+        raise ValueError(f'{origin} is not a variable')
+    if isinstance(scope[origin], list) or isinstance(scope[origin], dict):
+        scope[res] = len(scope[origin])
+    else:
+        scope[res] = 1
+
+
 def run(order):
     if order == '':
         return
@@ -629,6 +640,8 @@ def run(order):
         inner_append(order, 'list')
     elif order.startswith('appenddict'):
         inner_append(order, 'dict')
+    elif order.startswith('len'):
+        get_len(order)
     else:
         if record:
             orders.pop()
