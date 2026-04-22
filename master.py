@@ -305,6 +305,9 @@ help = (
     'hist [num]->show all orders that have entered or only last num counts\t'
     'inc <variable_name>->let a variable increase one\t'
     'dec <variable_name>->let a variable decrease one\t'
+    'appendlist <variable_name> <element1,element2,element3>->append element to list\t'
+    'appenddict <variable_name> <key1:val1,key2:val2>->append key:val to list\t'
+    'len <query_variable_name> <outcome_variable_name>->store the length of query_variable_name to outcome_variable_name\t'
     'reo <num>-> recall order that index is num in hist (negative num is ok,as python list)\n'
     'introduction_of_variable: int , float , str , dict , list , bool are OK.\t'
     'zero is False.\t'
@@ -325,7 +328,10 @@ help = (
     'About If and While:You can command if (condition) and command enter , one order should be in the same line.\t'
     'The if won\'t be run until you command endif. Or you can command like if (condition);statement1;statement2;endif , '
     'it\'s also right.\t You can command while (condition) and command enter like if , or in a line also like if , '
-    'while ended with endwhile.\t break and continue is support.\n '
+    'while ended with endwhile.\t break and continue is support.\t'
+    'len order will create a new variable if outcome_variable_name is not in scope  , and if query_variable '
+    'is not list or dict or str, the int of 1 would be stored in outcome_variable.\t'
+    'Both appendlist and appenddict will create a new variable if goal is not a real variable.\n '
     'Example:\n'
     'I:\n'
     'set a int 15\n'
@@ -587,7 +593,7 @@ def get_len(order):
     origin, res = s.split(maxsplit=1)
     if origin not in scope:
         raise ValueError(f'{origin} is not a variable')
-    if isinstance(scope[origin], list) or isinstance(scope[origin], dict):
+    if isinstance(scope[origin], list) or isinstance(scope[origin], dict) or isinstance(scope[origin], str):
         scope[res] = len(scope[origin])
     else:
         scope[res] = 1
