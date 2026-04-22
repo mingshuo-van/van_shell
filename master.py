@@ -388,7 +388,7 @@ def reo(order):
 
 def run_if(work):
     global record
-    arr = work.split(';')
+    arr = special_split(work, ';')
     ok = arr[0][2:].strip()
     arr = list(map(lambda x: x.strip(), arr))
     jmp = 0
@@ -469,7 +469,7 @@ def get_if(order):
 
 def run_while(work):
     global record
-    arr = work.split(';')
+    arr = special_split(work, ';')
     ok = arr[0][5:].strip()
     arr = list(map(lambda x: x.strip(), arr))
     while replace_variable(ok) != '0':
