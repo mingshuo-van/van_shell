@@ -50,7 +50,8 @@ def replace_variable_only(s: str):
         return res
     if s in scope:
         r = str(scope[s])
-        return '\\{' + r + '}' if isinstance(scope[s], dict) else r
+        return '\\{' + transform(r) + '}' if isinstance(scope[s], dict) else (
+            transform(r) if isinstance(scope[s], list) else r)
     return s
 
 
