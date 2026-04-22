@@ -3,6 +3,37 @@ import sys
 
 work_dir = ''
 scope = {}
+stack = []
+
+
+def stackpop(order):
+    _, var = order.split(maxsplit=1)
+    if len(stack) == 0:
+        raise ValueError('stack is empty')
+    scope[var] = stack.pop()
+
+
+def stackpush(order):
+    _, var = order.split(maxsplit=1)
+    if var in scope:
+        stack.append(scope[var])
+    else:
+        stack.append(var)
+
+
+def stackout(order):
+    if len(stack) > 0:
+        stack.pop()
+
+
+def stackpeek(order):
+    _, var = order.split(maxsplit=1)
+    if len(stack) == 0:
+        raise ValueError('stack is empty')
+    scope[var] = stack[-1]
+
+
+stack_order = {'stackpop': stackpop, 'stackpush': stackpush, 'stackout': stackout, 'stackpeek': stackpeek}
 
 
 def get_variable(s: str, left_ch: str, right_ch: str):
@@ -308,6 +339,14 @@ help = (
     'appendlist <variable_name> <element1,element2,element3>->append element to list\t'
     'appenddict <variable_name> <key1:val1,key2:val2>->append key:val to list\t'
     'len <query_variable_name> <outcome_variable_name>->store the length of query_variable_name to outcome_variable_name\t'
+    'stackpush <variable_name>->push the variable_name into stack , if variable_name not in stack , '
+    'push the string of variable_name into stack.\t'
+    'stackpop <variable_name>->pop the value on the top of stack and store as variable_name , if variable_name not in '
+    'scope , it will be created.\t'
+    'stackout-> throw the value on the top of stack , if the stack is empty , won\'t raise any error.\t'
+    'stackpeek <variable_name>->copy the value on the top of stack into the variable_name , if variable_name not in '
+    'scope , it would be created. If the stack is empty , throw a error.\t'
+    'stack->print the stack into a screen.\t'
     'reo <num>-> recall order that index is num in hist (negative num is ok,as python list)\n'
     'introduction_of_variable: int , float , str , dict , list , bool are OK.\t'
     'zero is False.\t'
@@ -362,7 +401,7 @@ orders = []
 
 sample_order = {'exit': lambda: sys.exit(), 'scope': lambda: print(scope),
                 'help': lambda: print(help), 'ls': lambda: print(os.listdir(os.getcwd())),
-                'wds': lambda: print(files)}
+                'wds': lambda: print(files), 'stack': lambda: print(stack)}
 
 
 def pop():
@@ -648,6 +687,8 @@ def run(order):
         inner_append(order, 'dict')
     elif order.startswith('len'):
         get_len(order)
+    elif order.split()[0] in stack_order:
+        stack_order[order.split()[0]](order)
     else:
         if record:
             orders.pop()
