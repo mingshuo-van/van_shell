@@ -238,77 +238,38 @@ def transform(s: str, target: str = None):
     return ''.join(res)
 
 
-def get_dict(s: str):
+def special_split(s: str, ch: str, special: str = '\\') -> list:
     idx = []
     jmp = False
     size = len(s)
-    for i, ch in enumerate(s):
+    for i, cur in enumerate(s):
         if jmp:
             jmp = False
             continue
-        if ch == '\\':
+        if cur == special:
             if i + 1 >= size:
                 raise ValueError('in front of \\ be a operator')
             jmp = True
-        if ch == ',':
+        if cur == ch:
             idx.append(i)
     t = []
     last = 0
     for i in idx:
         t.append(s[last:i])
         last = i + 1
-    if last <= len(s):
+    if last <= size:
         t.append(s[last:])
-    idx = []
-    for i in t:
-        size = len(i)
-        idx.append([])
-        jmp = False
-        for j, ch in enumerate(i):
-            if jmp:
-                jmp = False
-                continue
-            if ch == '\\':
-                if j + 1 >= size:
-                    raise ValueError('in front of \\ be a operator')
-                jmp = True
-            if ch == ':':
-                idx[-1].append(j)
-    arr = []
-    for i, j in enumerate(idx):
-        arr.append([])
-        last = 0
-        for k in j:
-            arr[-1].append(t[i][last:k])
-            last = k + 1
-        if last <= len(t[i]):
-            arr[-1].append(t[i][last:])
+    return t
+
+
+def get_dict(s: str):
+    t = special_split(s, ',')
+    arr = [special_split(i, ':') for i in t]
     return {i[0]: i[1] if len(i) > 1 else '' for i in arr}
 
 
 def get_list(s: str):
-    idx = []
-    size = len(s)
-    jmp = False
-    for i, ch in enumerate(s):
-        if jmp:
-            jmp = False
-            continue
-        if ch == '\\':
-            if i + 1 >= size:
-                raise ValueError('in front of \\ must be a operator')
-            jmp = True
-        if ch == ',':
-            idx.append(i)
-
-    t = []
-    last = 0
-    for i in idx:
-        t.append(s[last:i])
-        last = i + 1
-    if last <= len(s):
-        t.append(s[last:])
-    return t
+    return special_split(s, ',')
 
 
 def echo(order):
