@@ -401,10 +401,35 @@ def run_if(work):
     global record
     arr = work.split(';')
     ok = arr[0][2:].strip()
+    arr = list(map(lambda x: x.strip(), arr))
+    count = 0
+    jmp = 0
     if replace_variable(ok) != '0':
-        record = False
         for i in range(1, len(arr) - 1):
-            run(arr[i])
+            if jmp:
+                jmp -= 1
+                continue
+            record = False
+            statement = arr[i]
+            if statement.startswith('if'):
+                count += 1
+                inner_if = []
+                endif_count = -1
+                success = False
+                for j in range(len(arr) - 1, i, -1):
+                    if arr[j].startswith('endif'):
+                        endif_count += 1
+                    if endif_count == count:
+                        success = True
+                        for k in range(i, j + 1):
+                            inner_if.append(arr[k])
+                        jmp = j - i
+                        break
+                if not success:
+                    record = True
+                    raise ValueError('if and endif must equal')
+                statement = ';'.join(inner_if)
+            run(statement)
         record = True
 
 
@@ -417,8 +442,8 @@ def get_if(order):
         while count != limit:
             cur = input().strip()
             arr.append(cur)
-            count += cur == 'endif'
-            limit += cur == 'if'
+            count += cur.startswith('endif')
+            limit += cur.startswith('if')
         work = ';'.join(arr)
         orders.append(work)
     else:
