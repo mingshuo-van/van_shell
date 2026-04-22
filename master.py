@@ -402,7 +402,6 @@ def run_if(work):
     arr = work.split(';')
     ok = arr[0][2:].strip()
     arr = list(map(lambda x: x.strip(), arr))
-    count = 0
     jmp = 0
     if replace_variable(ok) != '0':
         for i in range(1, len(arr) - 1):
@@ -412,14 +411,15 @@ def run_if(work):
             record = False
             statement = arr[i]
             if statement.startswith('if'):
-                count += 1
+                count = 0
                 inner_if = []
-                endif_count = -1
                 success = False
-                for j in range(len(arr) - 1, i, -1):
-                    if arr[j].startswith('endif'):
-                        endif_count += 1
-                    if endif_count == count:
+                for j in range(i, len(arr) - 1):
+                    if arr[j].startswith('if'):
+                        count += 1
+                    elif arr[j].startswith('endif'):
+                        count -= 1
+                    if not count:
                         success = True
                         for k in range(i, j + 1):
                             inner_if.append(arr[k])
