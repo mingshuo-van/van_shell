@@ -1,6 +1,8 @@
 import os
 import sys
 
+import helpFile
+
 work_dir = ''
 scope = {}
 stack = []
@@ -329,71 +331,7 @@ def push(order):
     os.chdir(order[5:])
 
 
-help = (
-    'sample_order: exit->turn off this program\tscope->see all variables\thelp->get help\tls->show files\twds->show work_dir\n'
-    'other_order: echo <content>->print something\t'
-    'set <name> <type> <value>->create new variable\tpush <address>->enter a new work_dir\tpop->return last work_dir\t'
-    'hist [num]->show all orders that have entered or only last num counts\t'
-    'inc <variable_name>->let a variable increase one\t'
-    'dec <variable_name>->let a variable decrease one\t'
-    'appendlist <variable_name> <element1,element2,element3>->append element to list\t'
-    'appenddict <variable_name> <key1:val1,key2:val2>->append key:val to list\t'
-    'len <query_variable_name> <outcome_variable_name>->store the length of query_variable_name to outcome_variable_name\t'
-    'stackpush <variable_name>->push the variable_name into stack , if variable_name not in stack , '
-    'push the string of variable_name into stack.\t'
-    'stackpop <variable_name>->pop the value on the top of stack and store as variable_name , if variable_name not in '
-    'scope , it will be created.\t'
-    'stackout-> throw the value on the top of stack , if the stack is empty , won\'t raise any error.\t'
-    'stackpeek <variable_name>->copy the value on the top of stack into the variable_name , if variable_name not in '
-    'scope , it would be created. If the stack is empty , throw a error.\t'
-    'stack->print the stack into a screen.\t'
-    'reo <num>-> recall order that index is num in hist (negative num is ok,as python list)\n'
-    'introduction_of_variable: int , float , str , dict , list , bool are OK.\t'
-    'zero is False.\t'
-    'You can vis variable by the form like {var}.\t'
-    'If you want to calc , please use the form like ({var1} + {var2}).\t'
-    '+ - * / % ^ is OK.\t'
-    '- could be sub or negative.\t'
-    'If you want to calc expression like -2^2 , you would get 4 instead of -4.\t'
-    'To get -4 , you have to enter -(2^2).\t'
-    'Dict and List ONLY HAVE one Dimension.\t'
-    'You can vis it\'s element by [].\t'
-    'The form like {arr[{var1}]} or {arr[({num1}+{num2})]} is OK.\n'
-    'Something that you should notice when you work: Keep in mind that if you want to use reo <num> to recall something , '
-    'you must notice that the sentence you just entered won\'t be recorded in hist.\t The sentence that you actually recalled will be'
-    'recorded in hist.\t And if you use reo <negative num> , you can freely use it if not out of range of list.\t'
-    'You don\'t need to worry about the question of off by one when use negative index , because the sentence you just '
-    'used will be put into hist after it is worked.\n'
-    'About If and While:You can command if (condition) and command enter , one order should be in the same line.\t'
-    'The if won\'t be run until you command endif. Or you can command like if (condition);statement1;statement2;endif , '
-    'it\'s also right.\t You can command while (condition) and command enter like if , or in a line also like if , '
-    'while ended with endwhile.\t break and continue is support.\t'
-    'len order will create a new variable if outcome_variable_name is not in scope  , and if query_variable '
-    'is not list or dict or str, the int of 1 would be stored in outcome_variable.\t'
-    'Both appendlist and appenddict will create a new variable if goal is not a real variable.\n '
-    'Example:\n'
-    'I:\n'
-    'set a int 15\n'
-    'if ({a})\n'
-    'while ({a})\n'
-    'dec a\n'
-    'echo {a}\n'
-    'if ({a} < 10)\n'
-    'continue\n'
-    'endif\n'
-    'echo I get it !\n'
-    'if ({a} < 5)\n'
-    'break\n'
-    'endif\n'
-    'endwhile\n'
-    'endif\n'
-    'II:\n'
-    'set a int 15\n'
-    'while ({a} >= 5);dec a;echo {a};if ({a} > 10);echo I\'m free!;endif;endwhile\n'
-    'III:\n'
-    'set a int 10'
-    'while ({a});dec a;echo {a}\\; !;endwhile'
-    'Hoping you have a lucky experience!\n')
+help = helpFile.help_str
 
 files = []
 
