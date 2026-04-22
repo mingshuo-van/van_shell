@@ -613,7 +613,7 @@ def run(order):
 
 while True:
     work_dir = os.getcwd()
-    scope['wd'] = work_dir
+    scope['_wd'] = work_dir
     if len(files) == 0 or files[-1] != work_dir:
         files.append(work_dir)
     print(work_dir, end='>')
