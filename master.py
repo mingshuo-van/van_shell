@@ -390,6 +390,8 @@ def hist(order):
 
 
 record = True
+break_flag = False
+continue_flag = False
 
 
 def reo(order):
@@ -408,6 +410,14 @@ def run_if(work):
             if jmp:
                 jmp -= 1
                 continue
+            if arr[i].startswith('break'):
+                global break_flag
+                break_flag = True
+                return
+            elif arr[i].startswith('continue'):
+                global continue_flag
+                continue_flag = True
+                return
             record = False
             statement = arr[i]
             if statement.startswith('if'):
@@ -481,6 +491,14 @@ def run_while(work):
             if jmp:
                 jmp -= 1
                 continue
+            global continue_flag
+            global break_flag
+            if continue_flag:
+                continue_flag = False
+                break
+            elif break_flag:
+                break_flag = False
+                return
             record = False
             statement = arr[i]
             if statement.startswith('while'):
