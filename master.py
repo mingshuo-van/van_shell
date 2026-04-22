@@ -42,7 +42,10 @@ def replace_variable_only(s: str):
         try:
             res = scope[s[:left]][index]
         except:
-            res = scope[s[:left]][int(index)]
+            try:
+                res = scope[s[:left]][int(index)]
+            except:
+                res = s
         res = str(res)
         return res
     if s in scope:
