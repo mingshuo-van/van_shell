@@ -561,6 +561,16 @@ def get_while(order):
     run_while(work)
 
 
+def inc(order, num: int):
+    var = order[3:].strip()
+    if var not in scope:
+        raise KeyError(f'{var} is not a variable')
+    try:
+        scope[var] += num
+    except Exception as e:
+        raise e
+
+
 def run(order):
     if order == '':
         return
@@ -600,6 +610,10 @@ def run(order):
             if record:
                 orders.pop()
         get_while(order)
+    elif order.startswith('inc'):
+        inc(order, 1)
+    elif order.startswith('dec'):
+        inc(order, -1)
     else:
         if record:
             orders.pop()
