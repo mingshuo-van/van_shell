@@ -6,6 +6,7 @@ import helpFile
 work_dir = ''
 scope = {}
 stack = []
+macro_map = {}
 
 
 def stackpop(order):
@@ -339,7 +340,8 @@ orders = []
 
 sample_order = {'exit': lambda: sys.exit(), 'scope': lambda: print(scope),
                 'help': lambda: print(help), 'ls': lambda: print(os.listdir(os.getcwd())),
-                'wds': lambda: print(files), 'stack': lambda: print(stack)}
+                'wds': lambda: print(files), 'stack': lambda: print(stack),
+                'register': lambda: print(macro_map)}
 
 
 def pop():
@@ -576,6 +578,73 @@ def get_len(order):
         scope[res] = 1
 
 
+def declare_macro(work):
+    arr = special_split(work, ';')
+    ok = arr[0][5:].strip()
+    end = -1
+    if ok[end] != '>':
+        raise ValueError('macro syntax is error , the form list marco func_name<var1,var2>')
+    start = 0
+    for i, ch in enumerate(ok):
+        if ch == '<':
+            start = i
+            break
+    if start == 0:
+        raise ValueError('macro syntax is error , the form list marco func_name<var1,var2>')
+    content = []
+    jmp = 0
+    content.append(arr[0])
+    for i in range(1, len(arr) - 1):
+        if jmp:
+            jmp -= 1
+            continue
+        if arr[i].startswith('macro'):
+            count = 0
+            inner_macro = []
+            success = False
+            for j in range(i, len(arr) - 1):
+                if arr[j].startswith('macro'):
+                    count += 1
+                elif arr[j].endswith('endmacro'):
+                    count -= 1
+                if not count:
+                    success = True
+                    for k in range(i, j + 1):
+                        inner_macro.append(arr[k])
+                    jmp = j - i
+                    break
+            if not success:
+                raise ValueError('marco and endmacro must equal')
+            statement = ';'.join(inner_macro)
+            content.append(statement)
+            continue
+        v = get_variable(arr[i], '{', '}')
+        res = arr[i]
+        for s, e in reversed(v):
+            res = res[:s + 1] + arr[i][s + 1:e - 1].strip() + res[e:]
+        content.append(res)
+    content.append(arr[-1])
+    macro_map[ok[:start].strip()] = content
+
+
+def get_macro(order):
+    arr = []
+    if not order.endswith('endmacro'):
+        arr.append(order)
+        count = 0
+        limit = 1
+        while count != limit:
+            cur = input().strip()
+            arr.append(cur)
+            count += cur.startswith('endmacro')
+            limit += cur.startswith('macro')
+        work = ';'.join(arr)
+        orders.append(work)
+    else:
+        work = order
+    declare_macro(work)
+
+
 def run(order):
     if order == '':
         return
@@ -627,6 +696,11 @@ def run(order):
         get_len(order)
     elif order.split()[0] in stack_order:
         stack_order[order.split()[0]](order)
+    elif order.startswith('macro'):
+        if not order.endswith('endmacro'):
+            if record:
+                orders.pop()
+        get_macro(order)
     else:
         if record:
             orders.pop()
