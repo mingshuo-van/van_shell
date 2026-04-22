@@ -344,6 +344,9 @@ help = (
     'II:\n'
     'set a int 15\n'
     'while ({a} >= 5);dec a;echo {a};if ({a} > 10);echo I\'m free!;endif;endwhile\n'
+    'III:\n'
+    'set a int 10'
+    'while ({a});dec a;echo {a}\\; !;endwhile'
     'Hoping you have a lucky experience!\n')
 
 files = []
