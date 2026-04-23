@@ -15,13 +15,24 @@ def stackpop(order):
     _, var = order.split(maxsplit=1)
     if len(stack) == 0:
         raise ValueError('stack is empty')
-    scope[var] = stack.pop()
+    global in_macro
+    d = scope
+    if in_macro:
+        d = call_stack[-1]
+    d[var] = stack.pop()
 
 
 def stackpush(order):
     _, var = order.split(maxsplit=1)
-    if var in scope:
-        stack.append(scope[var])
+    d = scope
+    global in_macro
+    if in_macro:
+        for target in reversed(call_stack):
+            if var in target:
+                d = target
+                break
+    if var in d:
+        stack.append(d[var])
     else:
         stack.append(var)
 
@@ -35,7 +46,11 @@ def stackpeek(order):
     _, var = order.split(maxsplit=1)
     if len(stack) == 0:
         raise ValueError('stack is empty')
-    scope[var] = stack[-1]
+    global in_macro
+    d = scope
+    if in_macro:
+        d = call_stack[-1]
+    d[var] = stack[-1]
 
 
 stack_order = {'stackpop': stackpop, 'stackpush': stackpush, 'stackout': lambda x: stackout(), 'stackpeek': stackpeek}
@@ -279,30 +294,29 @@ def calc_order(order):
     v = get_variable(order, '(', ')')
     if not v:
         if get_variable(order, '{', '}'):
-            order = replace_variable(order)
+            order = replace_variable(order, True)
         return order
     res = order
     for s, e in reversed(v):
         t = order[s:e]
         if get_variable(t, '{', '}'):
-            t = replace_variable(t)
+            t = replace_variable(t, True)
         res = res[:s] + str(calc(t)) + res[e:]
     return res
 
 
-def replace_variable(order):
-    global macro_recursive
+def replace_variable(order, get=False):
     v = get_variable(order, '{', '}')
     if not v:
         if get_variable(order, '(', ')'):
             order = calc_order(order)
-        return replace_variable_only(order) if not macro_recursive else order
+        return replace_variable_only(order) if get else order
     res = order
     for s, e in reversed(v):
         t = order[s + 1:e - 1].strip()
         if get_variable(t, '(', ')'):
             t = calc_order(t)
-        res = res[:s] + replace_variable_only(replace_variable(t)) + res[e:]
+        res = res[:s] + replace_variable_only(replace_variable(t, True)) + res[e:]
     return calc_order(res)
 
 
@@ -605,6 +619,15 @@ def get_while(order):
 
 def inc(order, num: int):
     var = order[3:].strip()
+    global in_macro
+    if in_macro:
+        for d in reversed(call_stack):
+            if var in d:
+                try:
+                    d[var] += num
+                except Exception as e:
+                    raise e
+                return
     if var not in scope:
         raise KeyError(f'{var} is not a variable')
     try:
@@ -614,34 +637,46 @@ def inc(order, num: int):
 
 
 def inner_append(order, kind: str):
+    global in_macro
+    d: dict = scope
+    s = order[10:].strip()
+    name, content = s.split(maxsplit=1)
+    if in_macro:
+        for target in reversed(call_stack):
+            if name in target:
+                d = target
+                break
     if kind == 'list':
-        s = order[10:].strip()
-        name, content = s.split(maxsplit=1)
         t = special_split(content, ',')
-        if name in scope and isinstance(scope[name], list):
-            scope[name].extend(t)
+        if name in d and isinstance(d[name], list):
+            d[name].extend(t)
         else:
-            scope[name] = t
+            d[name] = t
     elif kind == 'dict':
-        s = order[10:].strip()
-        name, content = s.split(maxsplit=1)
         t = [special_split(i, ':') for i in special_split(content, ',')]
-        if name in scope and isinstance(scope[name], dict):
+        if name in d and isinstance(d[name], dict):
             for i in t:
-                scope[name][i[0]] = i[1]
+                d[name][i[0]] = i[1]
         else:
-            scope[name] = {i[0]: i[1] for i in t}
+            d[name] = {i[0]: i[1] for i in t}
 
 
 def get_len(order):
     s = order[3:].strip()
     origin, res = s.split(maxsplit=1)
-    if origin not in scope:
+    d: dict = scope
+    global in_macro
+    if in_macro:
+        for target in reversed(call_stack):
+            if origin in target:
+                d = target
+                break
+    if origin not in d:
         raise ValueError(f'{origin} is not a variable')
-    if isinstance(scope[origin], list) or isinstance(scope[origin], dict) or isinstance(scope[origin], str):
-        scope[res] = len(scope[origin])
+    if isinstance(d[origin], list) or isinstance(d[origin], dict) or isinstance(d[origin], str):
+        d[res] = len(d[origin])
     else:
-        scope[res] = 1
+        d[res] = 1
 
 
 def declare_macro(work):
@@ -711,17 +746,11 @@ def get_macro(order):
     declare_macro(work)
 
 
-macro_recursive = False
-
-
 def run_macro(arr):
     name = arr[0]
     t = arr[1]
-    global macro_recursive
-    macro_recursive = True
     for i in range(len(t)):
         t[i] = replace_variable(t[i])
-    macro_recursive = False
     content = macro_map[name]
     end = -1
     start = 0
