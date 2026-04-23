@@ -154,13 +154,23 @@ def calc(s: str):
             index += 1
         elif s[index] in operand:
             num = []
-            while index < size and s[index] in operand:
+            while index < size and (s[index] in operand or s[index] == ' '):
+                if s[index] == ' ':
+                    index += 1
+                    continue
                 num.append(s[index])
+                index += 1
+            while index < size and s[index] == ' ':
                 index += 1
             if index < size and s[index] == '.':
                 num.append(s[index])
                 index += 1
-            while index < size and s[index] in operand:
+            while index < size and s[index] == ' ':
+                index += 1
+            while index < size and (s[index] in operand or s[index] == ' '):
+                if s[index] == ' ':
+                    index += 1
+                    continue
                 num.append(s[index])
                 index += 1
             output.append(float(''.join(num)))
