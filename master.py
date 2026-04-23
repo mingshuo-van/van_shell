@@ -473,6 +473,11 @@ def run_if(work):
             elif arr[i].startswith('return ') or arr[i] == 'return':
                 global return_flag
                 return_flag = True
+                if arr[i] == 'return':
+                    global has_res_flag
+                    has_res_flag = False
+                else:
+                    run(arr[i])
                 return
             record = False
             statement = arr[i]
@@ -554,6 +559,17 @@ def run_while(work):
                 break
             elif break_flag:
                 break_flag = False
+                return
+            global return_flag
+            if return_flag:
+                return
+            elif arr[i].startswith('return ') or arr[i] == 'return':
+                return_flag = True
+                if arr[i] == 'return':
+                    global has_res_flag
+                    has_res_flag = False
+                else:
+                    run(arr[i])
                 return
             record = False
             statement = arr[i]
@@ -769,7 +785,11 @@ def run_macro(arr):
     global return_flag
     global has_res_flag
     has_res_flag = False
+    jmp = 0
     for i in range(1, len(content) - 1):
+        if jmp:
+            jmp -= 1
+            continue
         if return_flag:
             return_flag = False
             break
@@ -784,6 +804,44 @@ def run_macro(arr):
             in_macro = True
             run(statement)
             break
+        elif statement.startswith('if'):
+            count = 0
+            inner_if = []
+            success = False
+            for j in range(i, len(content) - 1):
+                if content[j].startswith('if'):
+                    count += 1
+                elif content[j] == 'endif':
+                    count -= 1
+                if not count:
+                    success = True
+                    for k in range(i, j + 1):
+                        inner_if.append(content[k])
+                    jmp = j - i
+                    break
+            if not success:
+                record = True
+                raise ValueError('if and endif must equal')
+            statement = ';'.join(inner_if)
+        elif statement.startswith('while'):
+            count = 0
+            inner_while = []
+            success = False
+            for j in range(i, len(content) - 1):
+                if content[j].startswith('while'):
+                    count += 1
+                elif content[j] == 'endwhile':
+                    count -= 1
+                if not count:
+                    success = True
+                    for k in range(i, j + 1):
+                        inner_while.append(content[k])
+                    jmp = j - i
+                    break
+            if not success:
+                record = True
+                raise ValueError('if and endif must equal')
+            statement = ';'.join(inner_while)
         for k, v in fact.items():
             statement = statement.replace(k, v)
         record = False
