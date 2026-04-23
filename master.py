@@ -7,6 +7,7 @@ work_dir = ''
 scope = {}
 stack = []
 call_stack = []
+return_stack = []
 macro_map = {}
 
 
@@ -66,7 +67,30 @@ def get_variable(s: str, left_ch: str, right_ch: str):
 in_macro = False
 
 
+def parse_macro(s: str):
+    v = get_variable(s, '<', '>')
+    if not v:
+        return []
+    if len(v) > 1:
+        return []
+    if v[0][0] == 0 or v[0][1] != len(s):
+        return []
+    left = v[0][0]
+    right = v[0][1]
+    name = s[:left].strip()
+    a = special_split(s[left + 1:right - 1], ',')
+    return [name.strip(), a]
+
+
 def replace_variable_only(s: str):
+    v = parse_macro(s)
+    if v:
+        run_macro(v)
+        res = ''
+        global has_res_flag
+        if has_res_flag:
+            res = return_stack.pop()
+        return str(res)
     left = 0
     right = 0
     for i, j in enumerate(s):
@@ -76,25 +100,28 @@ def replace_variable_only(s: str):
             right = i
             break
     if left != right and left > 0:
-        index = s[left + 1:right]
-        key = call_stack[-1][s[:left]] if (in_macro and s[:left] in call_stack[-1]) else s[:left]
+        d = call_stack[-1][s[:left]] if (in_macro and s[:left] in call_stack[-1]) else (scope[s[:left]]
+                                                                                        if s[:left] in scope else s[
+                                                                                                                  :left])
+        index = call_stack[-1][s[left + 1:right]] if (in_macro and s[left + 1:right] in call_stack[-1]) \
+            else s[left + 1:right]
         try:
-            res = scope[key][index]
+            res = d[index]
         except:
             try:
-                res = scope[key][int(index)]
+                res = d[int(index)]
             except:
                 res = s
         res = str(res)
         return res
-    key = s
     if in_macro and s in call_stack[-1]:
         key = call_stack[-1][s]
-    if key in scope:
-        r = str(scope[key])
+        return str(key)
+    if s in scope:
+        r = str(scope[s])
         return '\\{' + transform(r) + '}' if isinstance(scope[s], dict) else (
             transform(r) if isinstance(scope[s], list) else r)
-    return key
+    return s
 
 
 prior = {'(': 0, ')': 0, '+': 1, '-': 1, '*': 2, '/': 2, '%': 2, '^': 3, '~': 4, '>': 0.7, '<': 0.7, '==': 0.69,
@@ -352,8 +379,12 @@ cast = {'int': int, 'float': float, 'str': str, 'dict': get_dict, 'list': get_li
 
 def parse_set(order: str):
     global scope
+    global in_macro
     order = order.split(maxsplit=3)
-    scope[order[1]] = cast[order[2]](order[3])
+    if not in_macro:
+        scope[order[1]] = cast[order[2]](order[3])
+    else:
+        call_stack[-1][order[1]] = cast[order[2]](order[3])
 
 
 def push(order):
@@ -396,6 +427,8 @@ def hist(order):
 record = True
 break_flag = False
 continue_flag = False
+return_flag = False
+has_res_flag = False
 
 
 def reo(order):
@@ -414,13 +447,17 @@ def run_if(work):
             if jmp:
                 jmp -= 1
                 continue
-            if arr[i].startswith('break'):
+            if arr[i] == 'break':
                 global break_flag
                 break_flag = True
                 return
-            elif arr[i].startswith('continue'):
+            elif arr[i] == 'continue':
                 global continue_flag
                 continue_flag = True
+                return
+            elif arr[i].startswith('return ') or arr[i] == 'return':
+                global return_flag
+                return_flag = True
                 return
             record = False
             statement = arr[i]
@@ -649,7 +686,7 @@ def declare_macro(work):
         v = get_variable(arr[i], '{', '}')
         res = arr[i]
         for s, e in reversed(v):
-            res = res[:s + 1] + arr[i][s + 1:e - 1].strip() + res[e:]
+            res = res[:s + 1] + arr[i][s + 1:e - 1].strip() + res[e - 1:]
         content.append(res)
     content.append(arr[-1])
     macro_map[ok[:start].strip()] = content
@@ -676,6 +713,8 @@ def get_macro(order):
 def run_macro(arr):
     name = arr[0]
     t = arr[1]
+    for i in range(len(t)):
+        t[i] = replace_variable(t[i])
     content = macro_map[name]
     end = -1
     start = 0
@@ -687,15 +726,29 @@ def run_macro(arr):
     origin = special_split(origin[start + 1:end], ',')
     if len(origin) != len(t):
         raise ValueError(f'{t} not equals with {origin}')
-    call_stack.append({k: v for k, v in zip(origin, t)})
-    fact = {' ' + k + ' ': ' ' + v + ' ' for k, v in call_stack[-1]}
+    call_stack.append({k: scope[v] if v in scope else v for k, v in zip(origin, t)})
+    fact = {' ' + k + ' ': ' ' + v + ' ' for k, v in call_stack[-1].items()}
     global record
     global in_macro
+    global return_flag
+    global has_res_flag
+    has_res_flag = False
     for i in range(1, len(content) - 1):
+        if return_flag:
+            return_flag = False
+            break
         statement = content[i]
         if statement.startswith('macro') and statement.endswith('endmacro'):
             run(statement)
-        for k, v in fact:
+        elif statement.startswith('return ') or statement == 'return':
+            if statement == 'return':
+                has_res_flag = False
+                break
+            record = False
+            in_macro = True
+            run(statement)
+            break
+        for k, v in fact.items():
             statement = statement.replace(k, v)
         record = False
         in_macro = True
@@ -705,19 +758,28 @@ def run_macro(arr):
     record = True
 
 
+def parse_return(order):
+    res = order[6:].strip()
+    global has_res_flag
+    has_res_flag = True
+    return_stack.append(replace_variable(res))
+
+
 def run(order):
     if order == '':
         return
     if record:
         orders.append(order)
-    if order.startswith('if') or order.startswith('while'):
+    if order.startswith('if') or order.startswith('while') or order.startswith('macro '):
         pass
     else:
         try:
             order = replace_variable(order)
         except Exception as e:
             print('error')
-            print(str(e))
+            raise e
+    if order == '':
+        return
     if order in sample_order:
         sample_order[order]()
     elif order.startswith('set '):
@@ -754,17 +816,19 @@ def run(order):
         inner_append(order, 'dict')
     elif order.startswith('len '):
         get_len(order)
-    elif order.split()[0] in stack_order:
+    elif order.startswith('stack') and order.split()[0] in stack_order:
         stack_order[order.split()[0]](order)
     elif order.startswith('macro '):
         if not order.endswith('endmacro'):
             if record:
                 orders.pop()
         get_macro(order)
+    elif order.startswith('return '):
+        parse_return(order)
     else:
         if record:
             orders.pop()
-        raise NameError('please enter right order')
+        raise NameError(f'please enter right order,error:{order}')
 
 
 while True:
