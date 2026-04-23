@@ -291,11 +291,12 @@ def calc_order(order):
 
 
 def replace_variable(order):
+    global macro_recursive
     v = get_variable(order, '{', '}')
     if not v:
         if get_variable(order, '(', ')'):
             order = calc_order(order)
-        return replace_variable_only(order)
+        return replace_variable_only(order) if not macro_recursive else order
     res = order
     for s, e in reversed(v):
         t = order[s + 1:e - 1].strip()
@@ -710,11 +711,17 @@ def get_macro(order):
     declare_macro(work)
 
 
+macro_recursive = False
+
+
 def run_macro(arr):
     name = arr[0]
     t = arr[1]
+    global macro_recursive
+    macro_recursive = True
     for i in range(len(t)):
         t[i] = replace_variable(t[i])
+    macro_recursive = False
     content = macro_map[name]
     end = -1
     start = 0
@@ -727,7 +734,7 @@ def run_macro(arr):
     if len(origin) != len(t):
         raise ValueError(f'{t} not equals with {origin}')
     call_stack.append({k: scope[v] if v in scope else v for k, v in zip(origin, t)})
-    fact = {' ' + k + ' ': ' ' + v + ' ' for k, v in call_stack[-1].items()}
+    fact = {' ' + k + ' ': ' ' + v + ' ' for k, v in zip(origin, t)}
     global record
     global in_macro
     global return_flag
@@ -845,3 +852,4 @@ while True:
     except Exception as e:
         print('please enter help to get using assistance')
         print(str(e))
+        raise e
