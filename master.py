@@ -423,7 +423,7 @@ def run_if(work):
                 for j in range(i, len(arr) - 1):
                     if arr[j].startswith('if'):
                         count += 1
-                    elif arr[j].startswith('endif'):
+                    elif arr[j] == 'endif':
                         count -= 1
                     if not count:
                         success = True
@@ -442,7 +442,7 @@ def run_if(work):
                 for j in range(i, len(arr) - 1):
                     if arr[j].startswith('while'):
                         count += 1
-                    elif arr[j].startswith('endwhile'):
+                    elif arr[j] == 'endwhile':
                         count -= 1
                     if not count:
                         success = True
@@ -467,7 +467,7 @@ def get_if(order):
         while count != limit:
             cur = input().strip()
             arr.append(cur)
-            count += cur.startswith('endif')
+            count += cur == 'endif'
             limit += cur.startswith('if')
         work = ';'.join(arr)
         orders.append(work)
@@ -504,7 +504,7 @@ def run_while(work):
                 for j in range(i, len(arr) - 1):
                     if arr[j].startswith('while'):
                         count += 1
-                    elif arr[j].startswith('endwhile'):
+                    elif arr[j] == 'endwhile':
                         count -= 1
                     if not count:
                         success = True
@@ -523,7 +523,7 @@ def run_while(work):
                 for j in range(i, len(arr) - 1):
                     if arr[j].startswith('if'):
                         count += 1
-                    elif arr[j].startswith('endif'):
+                    elif arr[j] == 'endif':
                         count -= 1
                     if not count:
                         success = True
@@ -548,7 +548,7 @@ def get_while(order):
         while count != limit:
             cur = input().strip()
             arr.append(cur)
-            count += cur.startswith('endwhile')
+            count += cur == 'endwhile'
             limit += cur.startswith('while')
         work = ';'.join(arr)
         orders.append(work)
@@ -625,7 +625,7 @@ def declare_macro(work):
             for j in range(i, len(arr) - 1):
                 if arr[j].startswith('macro'):
                     count += 1
-                elif arr[j].endswith('endmacro'):
+                elif arr[j] == 'endmacro':
                     count -= 1
                 if not count:
                     success = True
@@ -656,7 +656,7 @@ def get_macro(order):
         while count != limit:
             cur = input().strip()
             arr.append(cur)
-            count += cur.startswith('endmacro')
+            count += cur == 'endmacro'
             limit += cur.startswith('macro')
         work = ';'.join(arr)
         orders.append(work)
