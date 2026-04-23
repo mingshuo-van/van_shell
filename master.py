@@ -6,6 +6,7 @@ import helpFile
 work_dir = ''
 scope = {}
 stack = []
+call_stack = []
 macro_map = {}
 
 
@@ -62,6 +63,9 @@ def get_variable(s: str, left_ch: str, right_ch: str):
     return v
 
 
+in_macro = False
+
+
 def replace_variable_only(s: str):
     left = 0
     right = 0
@@ -73,20 +77,24 @@ def replace_variable_only(s: str):
             break
     if left != right and left > 0:
         index = s[left + 1:right]
+        key = call_stack[-1][s[:left]] if (in_macro and s[:left] in call_stack[-1]) else s[:left]
         try:
-            res = scope[s[:left]][index]
+            res = scope[key][index]
         except:
             try:
-                res = scope[s[:left]][int(index)]
+                res = scope[key][int(index)]
             except:
                 res = s
         res = str(res)
         return res
-    if s in scope:
-        r = str(scope[s])
+    key = s
+    if in_macro and s in call_stack[-1]:
+        key = call_stack[-1][s]
+    if key in scope:
+        r = str(scope[key])
         return '\\{' + transform(r) + '}' if isinstance(scope[s], dict) else (
             transform(r) if isinstance(scope[s], list) else r)
-    return s
+    return key
 
 
 prior = {'(': 0, ')': 0, '+': 1, '-': 1, '*': 2, '/': 2, '%': 2, '^': 3, '~': 4, '>': 0.7, '<': 0.7, '==': 0.69,
@@ -376,7 +384,7 @@ def hist(order):
     else:
         size = len(orders)
         idx = 0
-        want = int(order[5:])
+        want = int(order[4:].strip())
         res = []
         while size and idx < want:
             res.append(f'{size - 1} -- {orders[size - 1]}')
@@ -391,7 +399,7 @@ continue_flag = False
 
 
 def reo(order):
-    idx = int(order[4:])
+    idx = int(order[3:].strip())
     run(orders[idx])
 
 
@@ -665,6 +673,38 @@ def get_macro(order):
     declare_macro(work)
 
 
+def run_macro(arr):
+    name = arr[0]
+    t = arr[1]
+    content = macro_map[name]
+    end = -1
+    start = 0
+    origin = content[0]
+    for i, ch in enumerate(origin):
+        if ch == '<':
+            start = i
+            break
+    origin = special_split(origin[start + 1:end], ',')
+    if len(origin) != len(t):
+        raise ValueError(f'{t} not equals with {origin}')
+    call_stack.append({k: v for k, v in zip(origin, t)})
+    fact = {' ' + k + ' ': ' ' + v + ' ' for k, v in call_stack[-1]}
+    global record
+    global in_macro
+    for i in range(1, len(content) - 1):
+        statement = content[i]
+        if statement.startswith('macro') and statement.endswith('endmacro'):
+            run(statement)
+        for k, v in fact:
+            statement = statement.replace(k, v)
+        record = False
+        in_macro = True
+        run(statement)
+    call_stack.pop()
+    in_macro = False
+    record = True
+
+
 def run(order):
     if order == '':
         return
@@ -680,11 +720,11 @@ def run(order):
             print(str(e))
     if order in sample_order:
         sample_order[order]()
-    elif order.startswith('set'):
+    elif order.startswith('set '):
         parse_set(order)
-    elif order.startswith('echo'):
+    elif order.startswith('echo '):
         echo(order)
-    elif order.startswith('push'):
+    elif order.startswith('push '):
         push(order)
     elif order.startswith('pop'):
         pop()
@@ -704,19 +744,19 @@ def run(order):
             if record:
                 orders.pop()
         get_while(order)
-    elif order.startswith('inc'):
+    elif order.startswith('inc '):
         inc(order, 1)
-    elif order.startswith('dec'):
+    elif order.startswith('dec '):
         inc(order, -1)
-    elif order.startswith('appendlist'):
+    elif order.startswith('appendlist '):
         inner_append(order, 'list')
-    elif order.startswith('appenddict'):
+    elif order.startswith('appenddict '):
         inner_append(order, 'dict')
     elif order.startswith('len'):
         get_len(order)
     elif order.split()[0] in stack_order:
         stack_order[order.split()[0]](order)
-    elif order.startswith('macro'):
+    elif order.startswith('macro '):
         if not order.endswith('endmacro'):
             if record:
                 orders.pop()
