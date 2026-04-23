@@ -89,12 +89,12 @@ def replace_variable_only(s: str):
     return s
 
 
-prior = {'(': 0, ')': 0, '+': 1, '-': 1, '*': 2, '/': 2, '%': 2, '^': 3, '~': 4, '>': 0.7, '<': 0.7, '==': 0.7,
-         '<=': 0.7, '>=': 0.7, '&': 0.6, '|': 0.5, '!': 4}
+prior = {'(': 0, ')': 0, '+': 1, '-': 1, '*': 2, '/': 2, '%': 2, '^': 3, '~': 4, '>': 0.7, '<': 0.7, '==': 0.69,
+         '<=': 0.7, '>=': 0.7, '&': 0.65, '|': 0.63, '!': 4, '&&': 0.6, '||': 0.5, '!=': 0.69}
 
 lr = {'+': 'left', '-': 'left', '*': 'left', '/': 'left', '%': 'left', '^': 'right', '~': 'right', '>': 'left',
       '<': 'left', '==': 'left', '>=': 'left', '<=': 'left', '&': 'left', '|': 'left', '!': 'right',
-      '=': 'this is not a bug'}
+      '=': 'this is not a bug', '&&': 'left', '||': 'left', '!=': 'left'}
 
 
 def check_couple(left: str, right: str, s: str):
@@ -123,8 +123,11 @@ func_operand = {
     '>=': lambda left, right: left >= right,
     '<=': lambda left, right: left <= right,
     '==': lambda left, right: left == right,
-    '&': lambda left, right: left and right,
-    '|': lambda left, right: left or right
+    '&&': lambda left, right: left and right,
+    '||': lambda left, right: left or right,
+    '|': lambda left, right: left | right,
+    '&': lambda left, right: left & right,
+    '!=': lambda left, right: left != right
 }
 
 
@@ -165,7 +168,7 @@ def calc(s: str):
         elif s[index] in lr:
             operator_ch = s[index]
             if index + 1 < size:
-                if operator_ch in {'<', '=', '>'}:
+                if operator_ch in {'<', '=', '>', '!'}:
                     while index + 1 < size and s[index + 1] == ' ':
                         index += 1
                     if index + 1 >= size:
@@ -180,6 +183,7 @@ def calc(s: str):
                         index += 1
                     if s[index + 1] == '&' or s[index + 1] == '|':
                         index += 1
+                        operator_ch += s[index]
             if len(operator) == 0:
                 operator.append(operator_ch)
             else:
@@ -215,7 +219,13 @@ def calc(s: str):
             else:
                 right = stack.pop()
                 left = stack.pop()
-                stack.append(func_operand[token](left, right))
+                try:
+                    stack.append(func_operand[token](left, right))
+                except Exception as e:
+                    if left == int(left) and right == int(right):
+                        stack.append(func_operand[token](int(left), int(right)))
+                    else:
+                        raise e
     c = int(stack[-1])
     return c if stack[-1] == c else stack[-1]
 
