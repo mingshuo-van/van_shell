@@ -752,7 +752,7 @@ def run(order):
         inner_append(order, 'list')
     elif order.startswith('appenddict '):
         inner_append(order, 'dict')
-    elif order.startswith('len'):
+    elif order.startswith('len '):
         get_len(order)
     elif order.split()[0] in stack_order:
         stack_order[order.split()[0]](order)
