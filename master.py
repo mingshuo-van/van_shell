@@ -557,6 +557,10 @@ def run_while(work):
             if jmp:
                 jmp -= 1
                 continue
+            if arr[i] == 'break':
+                break_flag = True
+            elif arr[i] == 'continue':
+                continue_flag = True
             if continue_flag:
                 continue_flag = False
                 break
