@@ -132,11 +132,13 @@ def replace_variable_only(s: str):
                 res = s
         res = str(res)
         return res
-    if in_macro and s in call_stack[-1]:
-        key = call_stack[-1][s]
-        r = str(key)
-        return '\\{' + transform(r) + '}' if isinstance(scope[s], dict) else (
-            transform(r) if isinstance(scope[s], list) else r)
+    if in_macro:
+        for target in reversed(call_stack):
+            if s in target:
+                key = target[s]
+                r = str(key)
+                return '\\{' + transform(r) + '}' if isinstance(target[s], dict) else (
+                    transform(r) if isinstance(target[s], list) else r)
     if s in scope:
         r = str(scope[s])
         return '\\{' + transform(r) + '}' if isinstance(scope[s], dict) else (
