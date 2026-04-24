@@ -397,10 +397,42 @@ def parse_set(order: str):
     global scope
     global in_macro
     order = order.split(maxsplit=3)
+    start = 0
+    end = -1
+    iterable = False
+    if order[1][end] == ']':
+        for i, ch in enumerate(order[1]):
+            if ch == '[':
+                sub = 1
+                while i - sub >= 0 and order[1][i - sub] == '\\':
+                    sub += 1
+                if sub & 1:
+                    start = i
+                    iterable = True
+                    break
     if not in_macro:
-        scope[order[1]] = cast[order[2]](order[3])
+        if iterable:
+            try:
+                scope[order[1][:start]][order[1][start + 1:end]] = cast['str'](order[2])
+            except:
+                try:
+                    scope[order[1][:start]][int(order[1][start + 1:end])] = cast['str'](order[2])
+                except:
+                    scope[order[1]] = cast[order[2]](order[3])
+        else:
+            scope[order[1]] = cast[order[2]](order[3])
     else:
-        call_stack[-1][order[1]] = cast[order[2]](order[3])
+        if iterable:
+            try:
+                call_stack[-1][order[1][:start]][order[1][start + 1:end]] = cast['str'](order[2])
+            except:
+                try:
+                    call_stack[-1][order[1][:start]][int(order[1][start + 1:end])] = cast['str'](order[2])
+                except:
+                    call_stack[-1][order[1]] = cast[order[2]](order[3])
+
+        else:
+            call_stack[-1][order[1]] = cast[order[2]](order[3])
 
 
 def push(order):
