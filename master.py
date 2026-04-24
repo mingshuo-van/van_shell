@@ -105,6 +105,7 @@ def replace_variable_only(s: str):
         global has_res_flag
         if has_res_flag:
             res = return_stack.pop()
+            has_res_flag = False
         return str(res)
     left = 0
     right = 0
@@ -958,4 +959,3 @@ while True:
     except Exception as e:
         print('please enter help to get using assistance')
         print(str(e))
-        raise e
