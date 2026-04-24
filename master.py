@@ -542,6 +542,10 @@ def get_if(order):
 
 
 def run_while(work):
+    global continue_flag
+    global break_flag
+    continue_flag = False
+    break_flag = False
     global record
     arr = special_split(work, ';')
     ok = arr[0][5:].strip()
@@ -552,8 +556,6 @@ def run_while(work):
             if jmp:
                 jmp -= 1
                 continue
-            global continue_flag
-            global break_flag
             if continue_flag:
                 continue_flag = False
                 break
@@ -778,12 +780,26 @@ def run_macro(arr):
     origin = special_split(origin[start + 1:end], ',')
     if len(origin) != len(t):
         raise ValueError(f'{t} not equals with {origin}')
-    call_stack.append({k: scope[v] if v in scope else v for k, v in zip(origin, t)})
+    cur_call_scope = {}
+    for k, v in zip(origin, t):
+        get = False
+        for target in reversed(call_stack):
+            if v in target:
+                cur_call_scope[k] = target[v]
+                get = True
+                break
+        if get:
+            continue
+        cur_call_scope[k] = scope[v] if v in scope else v
+    call_stack.append(cur_call_scope)
+
     fact = {' ' + k + ' ': ' ' + v + ' ' for k, v in zip(origin, t)}
     global record
     global in_macro
     global return_flag
     global has_res_flag
+    global break_flag
+    global continue_flag
     has_res_flag = False
     jmp = 0
     for i in range(1, len(content) - 1):
@@ -804,6 +820,9 @@ def run_macro(arr):
             in_macro = True
             run(statement)
             break
+        elif statement == 'break' or statement == 'continue':
+            break_flag = False
+            continue_flag = False
         elif statement.startswith('if'):
             count = 0
             inner_if = []
