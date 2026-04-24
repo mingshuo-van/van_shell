@@ -116,11 +116,13 @@ def replace_variable_only(s: str):
             right = i
             break
     if left != right and left > 0:
-        d = call_stack[-1][s[:left]] if (in_macro and s[:left] in call_stack[-1]) else (scope[s[:left]]
-                                                                                        if s[:left] in scope else s[
-                                                                                                                  :left])
-        index = call_stack[-1][s[left + 1:right]] if (in_macro and s[left + 1:right] in call_stack[-1]) \
-            else s[left + 1:right]
+        d: dict = scope[s[:left]] if s[:left] in scope else s[:left]
+        if in_macro:
+            for target in reversed(call_stack):
+                if s[:left] in target:
+                    d = target[s[:left]]
+                    break
+        index = s[left + 1:right]
         try:
             res = d[index]
         except:
@@ -132,7 +134,9 @@ def replace_variable_only(s: str):
         return res
     if in_macro and s in call_stack[-1]:
         key = call_stack[-1][s]
-        return str(key)
+        r = str(key)
+        return '\\{' + transform(r) + '}' if isinstance(scope[s], dict) else (
+            transform(r) if isinstance(scope[s], list) else r)
     if s in scope:
         r = str(scope[s])
         return '\\{' + transform(r) + '}' if isinstance(scope[s], dict) else (
