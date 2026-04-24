@@ -883,6 +883,41 @@ def parse_return(order):
     return_stack.append(replace_variable(res))
 
 
+def special_iter(order):
+    source = order[4:].strip()
+    global in_macro
+    d: dict = scope
+    if in_macro:
+        for t in reversed(call_stack):
+            if source in t:
+                d = t
+                break
+    if source not in d or not isinstance(d[source], dict):
+        raise ValueError(f'{source} not a dict')
+    d['_iter_arr'] = [(k, v) for k, v in d[source].items()]
+    d['_iter_arr_index'] = 0
+    d['_key'] = d['_iter_arr'][0][0]
+    d['_val'] = d['_iter_arr'][0][1]
+    d['_hasnext'] = d['_iter_arr_index'] < len(d['_iter_arr'])
+
+
+def iter_next():
+    d = scope
+    global in_macro
+    if in_macro:
+        for t in reversed(call_stack):
+            if '_iter_arr' in t:
+                d = t
+                break
+    if '_iter_arr' not in d:
+        return
+    d['_iter_arr_index'] += 1
+    d['_hasnext'] = d['_iter_arr_index'] < len(d['_iter_arr'])
+    if d['_hasnext']:
+        d['_key'] = d['_iter_arr'][d['_iter_arr_index']][0]
+        d['_val'] = d['_iter_arr'][d['_iter_arr_index']][1]
+
+
 def run(order):
     if order == '':
         return
@@ -943,6 +978,10 @@ def run(order):
         get_macro(order)
     elif order.startswith('return '):
         parse_return(order)
+    elif order.startswith('iter '):
+        special_iter(order)
+    elif order == 'next':
+        iter_next()
     else:
         if record:
             orders.pop()
