@@ -593,7 +593,7 @@ def run_while(work):
                         break
                 if not success:
                     record = True
-                    raise ValueError('if and endif must equal')
+                    raise ValueError('while and endwhile must equal')
                 statement = ';'.join(inner_while)
             elif statement.startswith('if'):
                 count = 0
@@ -860,7 +860,7 @@ def run_macro(arr):
                     break
             if not success:
                 record = True
-                raise ValueError('if and endif must equal')
+                raise ValueError('while and endwhile must equal')
             statement = ';'.join(inner_while)
         for k, v in fact.items():
             statement = statement.replace(k, v)
