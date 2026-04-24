@@ -1034,3 +1034,11 @@ while True:
     except Exception as e:
         print('please enter help to get using assistance')
         print(str(e))
+        record = True
+        break_flag = False
+        continue_flag = False
+        call_stack = []
+        return_stack = []
+        has_res_flag = False
+        return_flag = False
+        in_macro = False
