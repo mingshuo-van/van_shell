@@ -1062,6 +1062,32 @@ def import_file(order):
     sys.stdin = f
 
 
+def delete(order):
+    name = order[3:].strip()
+    arr = name.split(maxsplit=1)
+    local = True
+    name = arr[0]
+    if len(arr) > 1:
+        if arr[0] == 'global':
+            local = False
+            name = arr[1]
+        else:
+            raise NameError(f'{order} is a invalid ')
+    global in_macro
+    if in_macro:
+        if name in call_stack[-1]:
+            call_stack[-1].pop(name)
+        elif not local:
+            for target in reversed(call_stack):
+                if name in target:
+                    target.pop(name)
+                    return
+            if name in scope:
+                scope.pop(name)
+    elif name in scope:
+        scope.pop(name)
+
+
 def run(order):
     if order == '':
         return
@@ -1128,6 +1154,8 @@ def run(order):
         iter_next()
     elif order.startswith('import '):
         import_file(order)
+    elif order.startswith('del '):
+        delete(order)
     else:
         if record:
             orders.pop()
