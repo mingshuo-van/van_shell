@@ -1072,7 +1072,7 @@ def delete(order):
             local = False
             name = arr[1]
         else:
-            raise NameError(f'{order} is a invalid ')
+            raise NameError(f'{order} is a invalid order')
     global in_macro
     if in_macro:
         if name in call_stack[-1]:
@@ -1086,6 +1086,91 @@ def delete(order):
                 scope.pop(name)
     elif name in scope:
         scope.pop(name)
+
+
+def haskey(order):
+    s = order[6:].strip()
+    name, key, var = s.split(maxsplit=3)
+    d: dict = scope
+    global in_macro
+    if in_macro:
+        for target in reversed(call_stack):
+            if name in target:
+                d = target
+                break
+    if name in d and isinstance(d[name], dict):
+        res = key in d[name]
+        d = scope if not in_macro else call_stack[-1]
+        d[var] = res
+        return
+    map = replace_variable(name, get=True, keep=True)
+    d = scope if not in_macro else call_stack[-1]
+    if isinstance(map, dict):
+        d[var] = key in map
+    else:
+        d[var] = False
+
+
+def search(name, d):
+    v = get_variable(name, '[', ']')
+    if not v:
+        return False, 0
+    s = name[:v[0][0]]
+    if s in d:
+        d = d[s]
+    else:
+        return False, 0
+    for s, e in v:
+        key = name[s + 1:e - 1]
+        if key in d:
+            d = d[key]
+        else:
+            return False, 0
+    return True, d
+
+
+def delete_key(order):
+    s = order[6:].strip()
+    arr = s.split(maxsplit=3)
+    local = True
+    if len(arr) == 3:
+        if arr[0] == 'global':
+            local = False
+            name = arr[1]
+            key = arr[2]
+        else:
+            raise NameError(f'{order} is a invalid order')
+    elif len(arr) == 2:
+        name = arr[0]
+        key = arr[1]
+    else:
+        raise TypeError(f'{order} is a invalid order')
+    global in_macro
+    if not local:
+        d = scope
+        if in_macro:
+            for target in reversed(call_stack):
+                if name in target:
+                    d = target
+                    break
+        if name in d and isinstance(d[name], dict):
+            if key in d[name]:
+                d[name].pop(key)
+                return
+        map = replace_variable(name, get=True, keep=True)
+        if isinstance(map, dict):
+            if key in map:
+                map.pop(key)
+        else:
+            raise NameError(f'can not find a dict called {name} in global')
+    else:
+        d = call_stack[-1] if in_macro else scope
+        res, map = search(name, d)
+        if res:
+            if key in map:
+                map.pop(key)
+        else:
+            raise NameError(f'can not find a dict called {name} in local')
 
 
 def histc(order):
@@ -1167,6 +1252,10 @@ def run(order):
         delete(order)
     elif order.startswith('hist'):
         hist(order)
+    elif order.startswith('haskey'):
+        haskey(order)
+    elif order.startswith('delkey'):
+        delete_key(order)
     else:
         if record:
             orders.pop()
