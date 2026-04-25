@@ -129,7 +129,13 @@ def replace_variable_only(s: str):
             try:
                 res = d[int(index)]
             except:
-                res = s
+                try:
+                    a, b = special_split(index, ':')
+                    res = d[int(a):int(b)]
+                    res = transform(str(res))
+                    return res
+                except:
+                    res = s
         res = str(res)
         return res
     if in_macro:
@@ -141,7 +147,7 @@ def replace_variable_only(s: str):
                     transform(r) if isinstance(target[s], list) else r)
     if s in scope:
         r = str(scope[s])
-        return '\\{' + transform(r) + '}' if isinstance(scope[s], dict) else (
+        return '\\' + transform(r) if isinstance(scope[s], dict) else (
             transform(r) if isinstance(scope[s], list) else r)
     return s
 
@@ -595,6 +601,8 @@ def get_if(order):
         limit = 1
         while count != limit:
             cur = input().strip()
+            if cur.startswith('#'):
+                continue
             arr.append(cur)
             count += cur == 'endif'
             limit += cur.startswith('if')
@@ -695,6 +703,8 @@ def get_while(order):
         limit = 1
         while count != limit:
             cur = input().strip()
+            if cur.startswith('#'):
+                continue
             arr.append(cur)
             count += cur == 'endwhile'
             limit += cur.startswith('while')
@@ -824,6 +834,8 @@ def get_macro(order):
         limit = 1
         while count != limit:
             cur = input().strip()
+            if cur.startswith('#'):
+                continue
             arr.append(cur)
             count += cur == 'endmacro'
             limit += cur.startswith('macro')
@@ -976,6 +988,16 @@ def iter_next():
         d['_val'] = d['_iter_arr'][d['_iter_arr_index']][1]
 
 
+stdin = []
+
+
+def import_file(order):
+    address = order[6].split
+    stdin.append(sys.stdin)
+    f = open(address, 'r', encoding='utf8')
+    sys.stdin = f
+
+
 def run(order):
     if order == '':
         return
@@ -1052,8 +1074,15 @@ while True:
     if len(files) == 0 or files[-1] != work_dir:
         files.append(work_dir)
     print(work_dir, end='>')
-    order = input().strip()
+    try:
+        order = input().strip()
+    except EOFError:
+        sys.stdin.close()
+        sys.stdin = stdin.pop()
+        order = ''
     if order == '':
+        continue
+    if order.startswith('#'):
         continue
     try:
         run(order)
@@ -1068,3 +1097,4 @@ while True:
         has_res_flag = False
         return_flag = False
         in_macro = False
+        sys.stdin = sys.__stdin__
