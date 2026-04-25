@@ -1074,18 +1074,43 @@ def delete(order):
         else:
             raise NameError(f'{order} is a invalid order')
     global in_macro
-    if in_macro:
-        if name in call_stack[-1]:
-            call_stack[-1].pop(name)
-        elif not local:
+    if not local:
+        d = scope
+        for target in reversed(call_stack):
+            if name in target:
+                d = target
+                break
+        if name in d:
+            d.pop(name)
+        else:
+            v = get_variable(name, '[', ']')
+            if not v:
+                return
+            s = name[:v[-1][0]]
             for target in reversed(call_stack):
-                if name in target:
-                    target.pop(name)
+                res, map = search(s, target)
+                if res:
+                    if name[v[-1][0] + 1:v[-1][1] - 1] in target:
+                        target.pop(name[v[-1][0] + 1:v[-1][1] - 1])
+                        return
+            res, map = search(s, scope)
+            if res:
+                if name[v[-1][0] + 1:v[-1][1] - 1] in map:
+                    map.pop(name[v[-1][0] + 1:v[-1][1] - 1])
                     return
-            if name in scope:
-                scope.pop(name)
-    elif name in scope:
-        scope.pop(name)
+    else:
+        d = scope if not in_macro else call_stack[-1]
+        if name in d:
+            d.pop(name)
+        else:
+            v = get_variable(name, '[', ']')
+            if not v:
+                return
+            s = name[:v[-1][0]]
+            res, map = search(s, d)
+            if res:
+                if name[v[-1][0] + 1:v[-1][1] - 1] in map:
+                    map.pop(name[v[-1][0] + 1:v[-1][1] - 1])
 
 
 def haskey(order):
@@ -1114,8 +1139,9 @@ def haskey(order):
 def search(name, d):
     v = get_variable(name, '[', ']')
     if not v:
-        return False, 0
-    s = name[:v[0][0]]
+        s = name
+    else:
+        s = name[:v[0][0]]
     if s in d:
         d = d[s]
     else:
