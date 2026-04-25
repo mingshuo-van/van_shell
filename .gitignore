@@ -62,3 +62,6 @@ htmlcov/
 
 # pyenv
 .python-version
+
+# 测试
+test*.txt
