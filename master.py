@@ -499,6 +499,22 @@ def reo(order):
     run(orders[idx])
 
 
+def check_get(s: str, left: str, right: str):
+    arr = special_split(s, ';')
+    count = 0
+    arr = [i for i in arr if i != '']
+    if arr[-1] != right:
+        return False
+    for i in arr:
+        if i.startswith(left):
+            count += 1
+        elif i == right:
+            if count == 0:
+                return False
+            count -= 1
+    return count == 0
+
+
 def run_if(work):
     global record
     arr = special_split(work, ';')
@@ -573,7 +589,7 @@ def run_if(work):
 
 def get_if(order):
     arr = []
-    if not order.endswith('endif'):
+    if not check_get(order, 'if', 'endif'):
         arr.append(order)
         count = 0
         limit = 1
@@ -673,7 +689,7 @@ def run_while(work):
 
 def get_while(order):
     arr = []
-    if not order.endswith('endwhile'):
+    if not check_get(order, 'while', 'endwhile'):
         arr.append(order)
         count = 0
         limit = 1
@@ -802,7 +818,7 @@ def declare_macro(work):
 
 def get_macro(order):
     arr = []
-    if not order.endswith('endmacro'):
+    if not check_get(order, 'macro', 'endmacro'):
         arr.append(order)
         count = 0
         limit = 1
