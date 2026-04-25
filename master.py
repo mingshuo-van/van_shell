@@ -1088,6 +1088,15 @@ def delete(order):
         scope.pop(name)
 
 
+def histc(order):
+    global orders
+    if order == 'histc':
+        orders = []
+    else:
+        num = int(order[5:].strip())
+        orders = orders[num:]
+
+
 def run(order):
     if order == '':
         return
@@ -1113,8 +1122,8 @@ def run(order):
         push(order)
     elif order.startswith('pop'):
         pop()
-    elif order.startswith('hist'):
-        hist(order)
+    elif order.startswith('histc'):
+        histc(order)
     elif order.startswith('reo'):
         if record:
             orders.pop()
@@ -1156,6 +1165,8 @@ def run(order):
         import_file(order)
     elif order.startswith('del '):
         delete(order)
+    elif order.startswith('hist'):
+        hist(order)
     else:
         if record:
             orders.pop()
