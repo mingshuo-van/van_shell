@@ -1034,7 +1034,7 @@ stdin = []
 
 
 def import_file(order):
-    address = order[6].split
+    address = order[6:].strip()
     stdin.append(sys.stdin)
     f = open(address, 'r', encoding='utf8')
     sys.stdin = f
@@ -1104,6 +1104,8 @@ def run(order):
         special_iter(order)
     elif order == 'next':
         iter_next()
+    elif order.startswith('import '):
+        import_file(order)
     else:
         if record:
             orders.pop()
@@ -1115,7 +1117,8 @@ while True:
     scope['_wd'] = work_dir
     if len(files) == 0 or files[-1] != work_dir:
         files.append(work_dir)
-    print(work_dir, end='>')
+    if sys.stdin == sys.__stdin__:
+        print(work_dir, end='>')
     try:
         order = input().strip()
     except EOFError:
@@ -1128,6 +1131,10 @@ while True:
         continue
     try:
         run(order)
+    except EOFError:
+        sys.stdin.close()
+        sys.stdin = stdin.pop()
+        order = ''
     except Exception as e:
         print('please enter help to get using assistance')
         print(my_str(e))
@@ -1140,4 +1147,3 @@ while True:
         return_flag = False
         in_macro = False
         sys.stdin = sys.__stdin__
-        raise e
