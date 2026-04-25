@@ -904,7 +904,15 @@ def run_macro(arr):
         raise ValueError(f'{t} not equals with {origin}')
     fact = {' ' + k + ' ': ' ' + v + ' ' for k, v in zip(origin, t)}
     for i in range(len(t)):
-        t[i] = replace_variable(t[i], True)
+        get = False
+        for target in reversed(call_stack):
+            if t[i] in target:
+                t[i] = target[t[i]]
+                get = True
+                break
+        if not get:
+            if t[i] in scope:
+                t[i] = scope[t[i]]
     cur_call_scope = {k: v for k, v in zip(origin, t)}
     call_stack.append(cur_call_scope)
     global record
