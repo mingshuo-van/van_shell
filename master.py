@@ -902,7 +902,7 @@ def run_macro(arr):
     origin = special_split(origin[start + 1:end], ',')
     if len(origin) != len(t):
         raise ValueError(f'{t} not equals with {origin}')
-    fact = {' ' + k + ' ': ' ' + v + ' ' for k, v in zip(origin, t)}
+    # fact = {' ' + k + ' ': ' ' + v + ' ' for k, v in zip(origin, t)}
     for i in range(len(t)):
         get = False
         for target in reversed(call_stack):
@@ -983,8 +983,6 @@ def run_macro(arr):
                 record = True
                 raise ValueError('while and endwhile must equal')
             statement = ';'.join(inner_while)
-        for k, v in fact.items():
-            statement = statement.replace(k, v)
         record = False
         in_macro = True
         run(statement)
