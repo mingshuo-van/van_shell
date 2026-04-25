@@ -422,29 +422,21 @@ def parse_set(order: str):
                     start = i
                     iterable = True
                     break
-    if not in_macro:
-        if iterable:
+    d: dict = call_stack[-1] if in_macro else scope
+    if iterable:
+        try:
+            d[order[1][:start]][order[1][start + 1:end]] = cast[order[2]](order[3])
+        except:
             try:
-                scope[order[1][:start]][order[1][start + 1:end]] = cast['str'](order[2])
+                d[order[1][:start]][int(order[1][start + 1:end])] = cast[order[2]](order[3])
             except:
                 try:
-                    scope[order[1][:start]][int(order[1][start + 1:end])] = cast['str'](order[2])
+                    a, b = special_split(order[1][start + 1:end], ':')
+                    d[order[1][:start]][int(a):int(b)] = cast[order[2]](order[3])
                 except:
-                    scope[order[1]] = cast[order[2]](order[3])
-        else:
-            scope[order[1]] = cast[order[2]](order[3])
+                    d[order[1]] = cast[order[2]](order[3])
     else:
-        if iterable:
-            try:
-                call_stack[-1][order[1][:start]][order[1][start + 1:end]] = cast['str'](order[2])
-            except:
-                try:
-                    call_stack[-1][order[1][:start]][int(order[1][start + 1:end])] = cast['str'](order[2])
-                except:
-                    call_stack[-1][order[1]] = cast[order[2]](order[3])
-
-        else:
-            call_stack[-1][order[1]] = cast[order[2]](order[3])
+        d[order[1]] = cast[order[2]](order[3])
 
 
 def push(order):
