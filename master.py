@@ -451,7 +451,16 @@ files = []
 
 orders = []
 
-sample_order = {'exit': lambda: sys.exit(), 'scope': lambda: print(scope),
+
+def print_current_scope():
+    global in_macro
+    if not in_macro:
+        print(scope)
+    else:
+        print(call_stack[-1])
+
+
+sample_order = {'exit': lambda: sys.exit(), 'scope': lambda: print_current_scope(),
                 'help': lambda: print(help), 'ls': lambda: print(os.listdir(os.getcwd())),
                 'wds': lambda: print(files), 'stack': lambda: print(stack),
                 'register': lambda: print(macro_map)}
@@ -657,6 +666,8 @@ def run_while(work):
                     raise ValueError('if and endif must equal')
                 statement = ';'.join(inner_if)
             run(statement)
+    break_flag = False
+    continue_flag = False
     record = True
 
 
@@ -810,8 +821,6 @@ def get_macro(order):
 def run_macro(arr):
     name = arr[0]
     t = arr[1]
-    for i in range(len(t)):
-        t[i] = replace_variable(t[i])
     content = macro_map[name]
     end = -1
     start = 0
@@ -823,27 +832,18 @@ def run_macro(arr):
     origin = special_split(origin[start + 1:end], ',')
     if len(origin) != len(t):
         raise ValueError(f'{t} not equals with {origin}')
-    cur_call_scope = {}
-    for k, v in zip(origin, t):
-        get = False
-        for target in reversed(call_stack):
-            if v in target:
-                cur_call_scope[k] = target[v]
-                get = True
-                break
-        if get:
-            continue
-        cur_call_scope[k] = scope[v] if v in scope else v
-    call_stack.append(cur_call_scope)
-
     fact = {' ' + k + ' ': ' ' + v + ' ' for k, v in zip(origin, t)}
+    for i in range(len(t)):
+        t[i] = replace_variable(t[i], True)
+    cur_call_scope = {k: v for k, v in zip(origin, t)}
+    call_stack.append(cur_call_scope)
     global record
     global in_macro
     global return_flag
     global has_res_flag
     global break_flag
     global continue_flag
-    has_res_flag = False
+    save_old_macro_flag = in_macro
     jmp = 0
     for i in range(1, len(content) - 1):
         if jmp:
@@ -866,6 +866,7 @@ def run_macro(arr):
         elif statement == 'break' or statement == 'continue':
             break_flag = False
             continue_flag = False
+            continue
         elif statement.startswith('if'):
             count = 0
             inner_if = []
@@ -910,7 +911,10 @@ def run_macro(arr):
         in_macro = True
         run(statement)
     call_stack.pop()
-    in_macro = False
+    in_macro = save_old_macro_flag
+    return_flag = False
+    break_flag = False
+    continue_flag = False
     record = True
 
 
