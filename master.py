@@ -179,12 +179,12 @@ def replace_variable_only(s: str):
     return s
 
 
-prior = {'(': 0, ')': 0, '+': 1, '-': 1, '*': 2, '/': 2, '%': 2, '^': 3, '~': 4, '>': 0.7, '<': 0.7, '==': 0.69,
-         '<=': 0.7, '>=': 0.7, '&': 0.65, '|': 0.63, '!': 4, '&&': 0.6, '||': 0.5, '!=': 0.69}
+prior = {'(': 0, ')': 0, '+': 1, '-': 1, '*': 2, '/': 2, '%': 2, '^': 0.64, '~': 4, '>': 0.7, '<': 0.7, '==': 0.69,
+         '<=': 0.7, '>=': 0.7, '&': 0.65, '|': 0.63, '!': 4, '&&': 0.6, '||': 0.5, '!=': 0.69, '**': 3}
 
-lr = {'+': 'left', '-': 'left', '*': 'left', '/': 'left', '%': 'left', '^': 'right', '~': 'right', '>': 'left',
+lr = {'+': 'left', '-': 'left', '*': 'left', '/': 'left', '%': 'left', '^': 'left', '~': 'right', '>': 'left',
       '<': 'left', '==': 'left', '>=': 'left', '<=': 'left', '&': 'left', '|': 'left', '!': 'right',
-      '=': 'this is not a bug', '&&': 'left', '||': 'left', '!=': 'left'}
+      '=': 'this is not a bug', '&&': 'left', '||': 'left', '!=': 'left', '**': 'right'}
 
 
 def check_couple(left: str, right: str, s: str):
@@ -207,7 +207,7 @@ func_operand = {
     '*': lambda left, right: left * right,
     '/': lambda left, right: left / right if right != 0 else float('nan'),
     '%': lambda left, right: left % right,
-    '^': lambda left, right: left ** right,
+    '**': lambda left, right: left ** right,
     '>': lambda left, right: left > right,
     '<': lambda left, right: left < right,
     '>=': lambda left, right: left >= right,
@@ -217,7 +217,8 @@ func_operand = {
     '||': lambda left, right: left or right,
     '|': lambda left, right: left | right,
     '&': lambda left, right: left & right,
-    '!=': lambda left, right: left != right
+    '!=': lambda left, right: left != right,
+    '^': lambda left, right: left ^ right
 }
 
 
@@ -282,6 +283,12 @@ def calc(s: str):
                     while index + 1 < size and s[index + 1] == ' ':
                         index += 1
                     if s[index + 1] == '&' or s[index + 1] == '|':
+                        index += 1
+                        operator_ch += s[index]
+                if operator_ch == '*':
+                    while index + 1 < size and s[index + 1] == ' ':
+                        index += 1
+                    if s[index + 1] == '*':
                         index += 1
                         operator_ch += s[index]
             if len(operator) == 0:
