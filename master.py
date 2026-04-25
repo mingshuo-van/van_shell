@@ -107,15 +107,19 @@ def replace_variable_only(s: str):
             res = return_stack.pop()
             has_res_flag = False
         return str(res)
-    left = 0
-    right = 0
+    left = []
+    right = []
     for i, j in enumerate(s):
         if j == '[':
-            left = i
-        if j == ']':
-            right = i
-            break
-    if left != right and left > 0:
+            left.append(i)
+        elif j == ']':
+            right.append(i)
+
+    if left and len(left) == len(right) and left[0] > 0:
+        left_arr = left
+        right_arr = right
+        left = left_arr[0]
+        right = right_arr[0]
         d: dict = scope[s[:left]] if s[:left] in scope else s[:left]
         if in_macro:
             for target in reversed(call_stack):
@@ -132,23 +136,37 @@ def replace_variable_only(s: str):
                 try:
                     a, b = special_split(index, ':')
                     res = d[int(a):int(b)]
-                    res = transform(str(res))
-                    return res
                 except:
                     res = s
+                    return res
+        left_arr = left_arr[1:]
+        right_arr = right_arr[1:]
+        for left, right in zip(left_arr, right_arr):
+            index = s[left + 1:right]
+            try:
+                res = res[index]
+            except:
+                try:
+                    res = res[int(index)]
+                except:
+                    try:
+                        a, b = special_split(index, ':')
+                        res = res[int(a):int(b)]
+                    except:
+                        res = s
+                        return str(res)
         res = str(res)
         return res
+
     if in_macro:
         for target in reversed(call_stack):
             if s in target:
                 key = target[s]
                 r = str(key)
-                return '\\{' + transform(r) + '}' if isinstance(target[s], dict) else (
-                    transform(r) if isinstance(target[s], list) else r)
+                return transform(r) if (isinstance(target[s], dict) or isinstance(target[s], list)) else r
     if s in scope:
         r = str(scope[s])
-        return '\\' + transform(r) if isinstance(scope[s], dict) else (
-            transform(r) if isinstance(scope[s], list) else r)
+        return transform(r) if (isinstance(scope[s], dict) or isinstance(scope[s], list)) else r
     return s
 
 
@@ -409,33 +427,56 @@ def parse_set(order: str):
     global scope
     global in_macro
     order = order.split(maxsplit=3)
-    start = 0
-    end = -1
-    iterable = False
-    if order[1][end] == ']':
-        for i, ch in enumerate(order[1]):
-            if ch == '[':
-                sub = 1
-                while i - sub >= 0 and order[1][i - sub] == '\\':
-                    sub += 1
-                if sub & 1:
-                    start = i
-                    iterable = True
+    left = []
+    right = []
+    for i, j in enumerate(order[1]):
+        if j == '[':
+            left.append(i)
+        elif j == ']':
+            right.append(i)
+    d: dict = scope
+    if left and len(left) == len(right) and left[0] > 0:
+        start = left[0]
+        name = order[1][:start]
+        get = False
+        if in_macro:
+            for target in reversed(call_stack):
+                if name in target:
+                    d = target[name]
+                    get = True
                     break
-    d: dict = call_stack[-1] if in_macro else scope
-    if iterable:
-        try:
-            d[order[1][:start]][order[1][start + 1:end]] = cast[order[2]](order[3])
-        except:
+        if not get:
+            d = scope[name]
+        left_idx = left[-1]
+        right_idx = right[-1]
+        left = left[:-1]
+        right = right[:-1]
+        for start, end in zip(left, right):
             try:
-                d[order[1][:start]][int(order[1][start + 1:end])] = cast[order[2]](order[3])
+                d = d[order[1][start + 1:end]]
             except:
                 try:
-                    a, b = special_split(order[1][start + 1:end], ':')
-                    d[order[1][:start]][int(a):int(b)] = cast[order[2]](order[3])
+                    d = d[int(order[1][start + 1:end])]
                 except:
-                    d[order[1]] = cast[order[2]](order[3])
+                    try:
+                        a, b = special_split(order[1][start + 1:end], ':')
+                        d = d[int(a):int(b)]
+                    except:
+                        raise KeyError(f'{order[1][start + 1:end]} not a usable index')
+        try:
+            d[order[1][left_idx + 1:right_idx]] = cast[order[2]](order[3])
+        except:
+            try:
+                d[int(order[1][left_idx + 1:right_idx])] = cast[order[2]](order[3])
+            except:
+                try:
+                    a, b = special_split(order[1][left_idx + 1:right_idx], ':')
+                    d[int(a):int(b)] = cast[order[2]](order[3])
+                except:
+                    raise KeyError(f'{order[1][left_idx + 1:right_idx]} not a usable index')
     else:
+        if in_macro:
+            d = call_stack[-1]
         d[order[1]] = cast[order[2]](order[3])
 
 
