@@ -44,7 +44,7 @@ def stackpush(order):
     if var in d:
         stack.append(d[var])
     else:
-        stack.append(var)
+        stack.append(replace_variable(var, get=True, keep=True))
 
 
 def stackout():
