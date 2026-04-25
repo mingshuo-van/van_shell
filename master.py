@@ -912,6 +912,8 @@ def run_macro(arr):
         if not get:
             if t[i] in scope:
                 t[i] = scope[t[i]]
+            else:
+                t[i] = replace_variable(t[i])
     cur_call_scope = {k: v for k, v in zip(origin, t)}
     call_stack.append(cur_call_scope)
     global record
