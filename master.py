@@ -11,6 +11,16 @@ return_stack = []
 macro_map = {}
 
 
+def my_str(object):
+    if isinstance(object, dict):
+        res = {str(k): my_str(v) for k, v in object.items()}
+        return '\\\\' + str(res)
+    elif isinstance(object, list):
+        res = [my_str(i) for i in object]
+        return str(res)
+    return str(object)
+
+
 def stackpop(order):
     _, var = order.split(maxsplit=1)
     if len(stack) == 0:
@@ -106,7 +116,7 @@ def replace_variable_only(s: str):
         if has_res_flag:
             res = return_stack.pop()
             has_res_flag = False
-        return str(res)
+        return my_str(res)
     left = []
     right = []
     for i, j in enumerate(s):
@@ -154,18 +164,17 @@ def replace_variable_only(s: str):
                         res = res[int(a):int(b)]
                     except:
                         res = s
-                        return str(res)
-        res = str(res)
-        return res
+                        return my_str(res)
+        return transform(my_str(res)) if (isinstance(res, dict) or isinstance(res, list)) else my_str(res)
 
     if in_macro:
         for target in reversed(call_stack):
             if s in target:
                 key = target[s]
-                r = str(key)
+                r = my_str(key)
                 return transform(r) if (isinstance(target[s], dict) or isinstance(target[s], list)) else r
     if s in scope:
-        r = str(scope[s])
+        r = my_str(scope[s])
         return transform(r) if (isinstance(scope[s], dict) or isinstance(scope[s], list)) else r
     return s
 
@@ -325,14 +334,14 @@ def calc_order(order):
     v = get_variable(order, '(', ')')
     if not v:
         if get_variable(order, '{', '}'):
-            order = replace_variable(order, True)
+            order = replace_variable(order)
         return order
     res = order
     for s, e in reversed(v):
         t = order[s:e]
         if get_variable(t, '{', '}'):
-            t = replace_variable(t, True)
-        res = res[:s] + str(calc(t)) + res[e:]
+            t = replace_variable(t)
+        res = res[:s] + my_str(calc(t)) + res[e:]
     return res
 
 
@@ -347,7 +356,7 @@ def replace_variable(order, get=False):
         t = order[s + 1:e - 1].strip()
         if get_variable(t, '(', ')'):
             t = calc_order(t)
-        res = res[:s] + replace_variable_only(replace_variable(t, True)) + res[e:]
+        res = res[:s] + replace_variable(t, True) + res[e:]
     return calc_order(res)
 
 
@@ -1121,7 +1130,7 @@ while True:
         run(order)
     except Exception as e:
         print('please enter help to get using assistance')
-        print(str(e))
+        print(my_str(e))
         record = True
         break_flag = False
         continue_flag = False
@@ -1131,3 +1140,4 @@ while True:
         return_flag = False
         in_macro = False
         sys.stdin = sys.__stdin__
+        raise e
