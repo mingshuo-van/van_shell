@@ -1045,6 +1045,8 @@ def import_file(order):
     address = order[6:].strip()
     stdin.append(sys.stdin)
     f = open(address, 'r', encoding='utf8')
+    global record
+    record = False
     sys.stdin = f
 
 
@@ -1133,6 +1135,7 @@ while True:
         sys.stdin.close()
         sys.stdin = stdin.pop()
         order = ''
+        record = True
     if order == '':
         continue
     if order.startswith('#'):
@@ -1143,6 +1146,7 @@ while True:
         sys.stdin.close()
         sys.stdin = stdin.pop()
         order = ''
+        record = True
     except Exception as e:
         print('please enter help to get using assistance')
         print(my_str(e))
