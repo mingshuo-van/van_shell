@@ -107,7 +107,7 @@ def parse_macro(s: str):
     return [name.strip(), a]
 
 
-def replace_variable_only(s: str):
+def replace_variable_only(s: str, keep=False):
     v = parse_macro(s)
     if v:
         run_macro(v)
@@ -116,7 +116,7 @@ def replace_variable_only(s: str):
         if has_res_flag:
             res = return_stack.pop()
             has_res_flag = False
-        return my_str(res)
+        return my_str(res) if not keep else res
     left = []
     right = []
     for i, j in enumerate(s):
@@ -165,15 +165,21 @@ def replace_variable_only(s: str):
                     except:
                         res = s
                         return my_str(res)
+        if keep:
+            return res
         return transform(my_str(res)) if (isinstance(res, dict) or isinstance(res, list)) else my_str(res)
 
     if in_macro:
         for target in reversed(call_stack):
             if s in target:
                 key = target[s]
+                if keep:
+                    return key
                 r = my_str(key)
                 return transform(r) if (isinstance(target[s], dict) or isinstance(target[s], list)) else r
     if s in scope:
+        if keep:
+            return scope[s]
         r = my_str(scope[s])
         return transform(r) if (isinstance(scope[s], dict) or isinstance(scope[s], list)) else r
     return s
@@ -352,18 +358,18 @@ def calc_order(order):
     return res
 
 
-def replace_variable(order, get=False):
+def replace_variable(order, get=False, keep=False):
     v = get_variable(order, '{', '}')
     if not v:
         if get_variable(order, '(', ')'):
             order = calc_order(order)
-        return replace_variable_only(order) if get else order
+        return replace_variable_only(order, keep) if get else order
     res = order
     for s, e in reversed(v):
         t = order[s + 1:e - 1].strip()
         if get_variable(t, '(', ')'):
             t = calc_order(t)
-        res = res[:s] + replace_variable_only(replace_variable(t)) + res[e:]
+        res = res[:s] + replace_variable_only(replace_variable(t), keep) + res[e:]
     return calc_order(res)
 
 
@@ -920,7 +926,7 @@ def run_macro(arr):
             if t[i] in scope:
                 t[i] = scope[t[i]]
             else:
-                t[i] = replace_variable(t[i])
+                t[i] = replace_variable(t[i], keep=True)
     cur_call_scope = {k: v for k, v in zip(origin, t)}
     call_stack.append(cur_call_scope)
     global record
