@@ -356,7 +356,7 @@ def replace_variable(order, get=False):
         t = order[s + 1:e - 1].strip()
         if get_variable(t, '(', ')'):
             t = calc_order(t)
-        res = res[:s] + replace_variable(t, True) + res[e:]
+        res = res[:s] + replace_variable_only(replace_variable(t)) + res[e:]
     return calc_order(res)
 
 
