@@ -482,6 +482,8 @@ def parse_set(order: str):
                 except:
                     try:
                         a, b = special_split(order[1][start + 1:end], ':')
+                        a = 0 if a == '' else int(a)
+                        b = len(d) if b == '' else int(b)
                         d = d[int(a):int(b)]
                     except:
                         raise KeyError(f'{order[1][start + 1:end]} not a usable index')
@@ -493,6 +495,8 @@ def parse_set(order: str):
             except:
                 try:
                     a, b = special_split(order[1][left_idx + 1:right_idx], ':')
+                    a = 0 if a == '' else int(a)
+                    b = len(d) if b == '' else int(b)
                     d[int(a):int(b)] = cast[order[2]](order[3])
                 except:
                     raise KeyError(f'{order[1][left_idx + 1:right_idx]} not a usable index')
