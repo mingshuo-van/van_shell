@@ -220,6 +220,29 @@ echo {f<6>}
 echo {f<10>}
 echo {f<30>}
 
+echo 用记忆化优化斐波那契数列
+
+set arr dict 0:0,1:1
+
+macro f<n,arr>
+haskey arr {n} res
+if({res})
+return {arr[{n}]}
+endif
+set a int {f<({n}-1),arr>}
+set b int {f<({n}-2),arr>}
+appenddict arr {n}:({a}+{b})
+return {arr[{n}]}
+endmacro
+
+echo {f<10,arr>}
+
+echo {f<20,arr>}
+
+echo {f<30,arr>}
+
+echo {f<100,arr>}
+
 echo 在macro中嵌套定义并调用macro
 
 macro outer<content,key>
