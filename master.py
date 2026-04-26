@@ -145,6 +145,8 @@ def replace_variable_only(s: str, keep=False):
             except:
                 try:
                     a, b = special_split(index, ':')
+                    a = 0 if a == '' else int(a)
+                    b = len(d) if b == '' else int(b)
                     res = d[int(a):int(b)]
                 except:
                     res = s
@@ -161,6 +163,8 @@ def replace_variable_only(s: str, keep=False):
                 except:
                     try:
                         a, b = special_split(index, ':')
+                        a = 0 if a == '' else int(a)
+                        b = len(res) if b == '' else int(b)
                         res = res[int(a):int(b)]
                     except:
                         res = s
