@@ -782,7 +782,23 @@ def inc(order, num: int):
                     raise e
                 return
     if var not in scope:
-        raise KeyError(f'{var} is not a variable')
+        v = get_variable(var, '[', ']')
+        if v:
+            first = var[:v[-1][0]]
+            index = var[v[-1][0] + 1:v[-1][1] - 1]
+            target = replace_variable(first, get=True, keep=True)
+            res = target
+            if isinstance(target, dict) or isinstance(target, list):
+                try:
+                    res = target[index]
+                    target[index] = int(res) + num
+                except:
+                    try:
+                        res = target[int(index)]
+                        target[int(index)] = int(res) + num
+                    except:
+                        raise KeyError(f'{res} is not a variable that can be plus or sub')
+                return
     try:
         scope[var] += num
     except Exception as e:
