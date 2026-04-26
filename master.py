@@ -1187,36 +1187,59 @@ def delete(order):
                 d = target
                 break
         if name in d:
-            d.pop(name)
-        else:
-            v = get_variable(name, '[', ']')
-            if not v:
+            try:
+                d.pop(name)
                 return
-            s = name[:v[-1][0]]
-            for target in reversed(call_stack):
-                res, map = search(s, target)
-                if res:
-                    if name[v[-1][0] + 1:v[-1][1] - 1] in target:
-                        target.pop(name[v[-1][0] + 1:v[-1][1] - 1])
-                        return
-            res, map = search(s, scope)
-            if res:
-                if name[v[-1][0] + 1:v[-1][1] - 1] in map:
-                    map.pop(name[v[-1][0] + 1:v[-1][1] - 1])
-                    return
+            except:
+                pass
+        try:
+            d.pop(int(name))
+            return
+        except:
+            pass
+        v = get_variable(name, '[', ']')
+        if not v:
+            return
+        s = name[:v[-1][0]]
+        target = replace_variable(s, get=True, keep=True)
+        try:
+            target.pop(name[v[-1][0] + 1:v[-1][1] - 1])
+            return
+        except:
+            try:
+                target.pop(int(name[v[-1][0] + 1:v[-1][1] - 1]))
+                return
+            except:
+                pass
     else:
         d = scope if not in_macro else call_stack[-1]
         if name in d:
-            d.pop(name)
-        else:
-            v = get_variable(name, '[', ']')
-            if not v:
+            try:
+                d.pop(name)
                 return
-            s = name[:v[-1][0]]
-            res, map = search(s, d)
-            if res:
-                if name[v[-1][0] + 1:v[-1][1] - 1] in map:
+            except:
+                pass
+        try:
+            d.pop(int(name))
+            return
+        except:
+            pass
+        v = get_variable(name, '[', ']')
+        if not v:
+            return
+        s = name[:v[-1][0]]
+        res, map = search(s, d)
+        if res:
+            if name[v[-1][0] + 1:v[-1][1] - 1] in map:
+                try:
                     map.pop(name[v[-1][0] + 1:v[-1][1] - 1])
+                    return
+                except:
+                    pass
+            try:
+                map.pop(int(name[v[-1][0] + 1:v[-1][1] - 1]))
+            except:
+                pass
 
 
 def haskey(order):
