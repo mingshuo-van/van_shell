@@ -65,3 +65,6 @@ htmlcov/
 
 # 测试
 test*.txt
+
+# 打包
+*.spec
