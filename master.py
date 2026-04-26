@@ -1236,13 +1236,19 @@ def search(name, d):
     if s in d:
         d = d[s]
     else:
-        return False, 0
+        try:
+            d = d[int(s)]
+        except:
+            return False, 0
     for s, e in v:
         key = name[s + 1:e - 1]
         if key in d:
             d = d[key]
         else:
-            return False, 0
+            try:
+                d = d[int(key)]
+            except:
+                return False, 0
     return True, d
 
 
@@ -1288,6 +1294,80 @@ def delete_key(order):
                 map.pop(key)
         else:
             raise NameError(f'can not find a dict called {name} in local')
+
+
+def delete_index(order):
+    temp = order[8:].strip().split(maxsplit=2)
+    local = True
+    if len(temp) == 3:
+        if temp[0] == 'global':
+            local = False
+            name = temp[1]
+            idx = temp[2]
+        else:
+            raise NameError(f'{order} is a invalid order')
+    elif len(temp) == 2:
+        name = temp[0]
+        idx = temp[1]
+    else:
+        raise TypeError(f'{order} is a invalid order')
+    global in_macro
+    if not local:
+        d: dict = scope
+        if in_macro:
+            for target in reversed(call_stack):
+                if name in target:
+                    d = target
+                    break
+        if name in d:
+            arr = d[name]
+            if isinstance(arr, list):
+                arr.pop(int(idx))
+            else:
+                raise TypeError(f'{name} is not a list')
+        else:
+            v = get_variable(name, '[', ']')
+            if v:
+                want = name[:v[-1][0]].strip()
+                prev_index = name[v[-1][0] + 1:v[-1][1] - 1].strip()
+                target = replace_variable(want, get=True, keep=True)
+                try:
+                    arr = target[prev_index]
+                except:
+                    arr = target[int(prev_index)]
+                if isinstance(arr, list):
+                    arr.pop(int(idx))
+                else:
+                    raise TypeError(f'{name} is not a list')
+    else:
+        d = scope if not in_macro else call_stack[-1]
+        if name in d:
+            arr = d[name]
+            if isinstance(arr, list):
+                arr.pop(int(idx))
+            else:
+                raise TypeError(f'{name} is not a list')
+        else:
+            v = get_variable(name, '[', ']')
+            if v:
+                want = name[:v[-1][0]].strip()
+                prev_index = name[v[-1][0] + 1:v[-1][1] - 1].strip()
+                res, target = search(want, d)
+                if not res:
+                    raise NameError(f'{name} is not a variable in local')
+                try:
+                    arr = target[prev_index]
+                except:
+                    try:
+                        arr = target[int(prev_index)]
+                    except:
+                        raise NameError(f'{name} is not a variable in local')
+                if isinstance(arr, list):
+                    arr.pop(int(idx))
+                else:
+                    raise TypeError(f'{name} is not a list')
+            else:
+                raise NameError(f'{name} is not a variable in local')
 
 
 def histc(order):
@@ -1373,6 +1453,8 @@ def run(order):
         haskey(order)
     elif order.startswith('delkey'):
         delete_key(order)
+    elif order.startswith('delindex'):
+        delete_index(order)
     else:
         if record:
             orders.pop()
