@@ -1,6 +1,7 @@
 import os
 import sys
 
+sys.setrecursionlimit(10000)
 import helpFile
 
 work_dir = ''
