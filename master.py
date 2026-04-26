@@ -586,6 +586,7 @@ def check_get(s: str, left: str, right: str):
 
 def run_if(work):
     global record
+    save_old_record = record
     arr = special_split(work, ';')
     ok = arr[0][2:].strip()
     arr = list(map(lambda x: x.strip(), arr))
@@ -630,7 +631,7 @@ def run_if(work):
                         jmp = j - i
                         break
                 if not success:
-                    record = True
+                    record = save_old_record
                     raise ValueError('if and endif must equal')
                 statement = ';'.join(inner_if)
             elif statement.startswith('while'):
@@ -649,11 +650,11 @@ def run_if(work):
                         jmp = j - i
                         break
                 if not success:
-                    record = True
+                    record = save_old_record
                     raise ValueError('if and endif must equal')
                 statement = ';'.join(inner_while)
             run(statement)
-        record = True
+        record = save_old_record
 
 
 def get_if(order):
@@ -670,7 +671,8 @@ def get_if(order):
             count += cur == 'endif'
             limit += cur.startswith('if')
         work = ';'.join(arr)
-        orders.append(work)
+        if record:
+            orders.append(work)
     else:
         work = order
     run_if(work)
@@ -682,6 +684,7 @@ def run_while(work):
     continue_flag = False
     break_flag = False
     global record
+    save_old_record = record
     arr = special_split(work, ';')
     ok = arr[0][5:].strip()
     arr = list(map(lambda x: x.strip(), arr))
@@ -730,7 +733,7 @@ def run_while(work):
                         jmp = j - i
                         break
                 if not success:
-                    record = True
+                    record = save_old_record
                     raise ValueError('while and endwhile must equal')
                 statement = ';'.join(inner_while)
             elif statement.startswith('if'):
@@ -749,13 +752,13 @@ def run_while(work):
                         jmp = j - i
                         break
                 if not success:
-                    record = True
+                    record = save_old_record
                     raise ValueError('if and endif must equal')
                 statement = ';'.join(inner_if)
             run(statement)
     break_flag = False
     continue_flag = False
-    record = True
+    record = save_old_record
 
 
 def get_while(order):
@@ -772,7 +775,8 @@ def get_while(order):
             count += cur == 'endwhile'
             limit += cur.startswith('while')
         work = ';'.join(arr)
-        orders.append(work)
+        if record:
+            orders.append(work)
     else:
         work = order
     run_while(work)
@@ -986,7 +990,8 @@ def get_macro(order):
             count += cur == 'endmacro'
             limit += cur.startswith('macro')
         work = ';'.join(arr)
-        orders.append(work)
+        if record:
+            orders.append(work)
     else:
         work = order
     declare_macro(work)
@@ -1027,6 +1032,7 @@ def run_macro(arr):
     global break_flag
     global continue_flag
     save_old_macro_flag = in_macro
+    save_old_record = record
     jmp = 0
     for i in range(1, len(content) - 1):
         if jmp:
@@ -1066,7 +1072,7 @@ def run_macro(arr):
                     jmp = j - i
                     break
             if not success:
-                record = True
+                record = save_old_record
                 raise ValueError('if and endif must equal')
             statement = ';'.join(inner_if)
         elif statement.startswith('while'):
@@ -1085,7 +1091,7 @@ def run_macro(arr):
                     jmp = j - i
                     break
             if not success:
-                record = True
+                record = save_old_record
                 raise ValueError('while and endwhile must equal')
             statement = ';'.join(inner_while)
         record = False
@@ -1096,7 +1102,7 @@ def run_macro(arr):
     return_flag = False
     break_flag = False
     continue_flag = False
-    record = True
+    record = save_old_record
 
 
 def parse_return(order):
@@ -1143,12 +1149,21 @@ def iter_next():
 
 stdin = []
 
+imp_re = []
+imp_flags = []
+
+in_import = False
+
 
 def import_file(order):
     address = order[6:].strip()
     stdin.append(sys.stdin)
     f = open(address, 'r', encoding='utf8')
     global record
+    imp_re.append(record)
+    global in_import
+    imp_flags.append(in_import)
+    in_import = True
     record = False
     sys.stdin = f
 
@@ -1409,7 +1424,8 @@ def run(order):
     elif order.startswith('reo'):
         if record:
             orders.pop()
-        reo(order)
+        if not in_import:
+            reo(order)
     elif order.startswith('if'):
         if not order.endswith('endif'):
             if record:
@@ -1474,7 +1490,8 @@ while True:
         sys.stdin.close()
         sys.stdin = stdin.pop()
         order = ''
-        record = True
+        record = imp_re.pop()
+        in_import = imp_flags.pop()
     if order == '':
         continue
     if order.startswith('#'):
@@ -1485,7 +1502,8 @@ while True:
         sys.stdin.close()
         sys.stdin = stdin.pop()
         order = ''
-        record = True
+        record = imp_re.pop()
+        in_import = imp_flags.pop()
     except Exception as e:
         print('please enter help to get using assistance')
         print(my_str(e))
