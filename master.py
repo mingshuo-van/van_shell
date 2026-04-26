@@ -275,7 +275,11 @@ def calc(s: str):
                     continue
                 num.append(s[index])
                 index += 1
-            output.append(float(''.join(num)))
+            line = ''.join(num)
+            try:
+                output.append(int(line))
+            except ValueError:
+                output.append(float(line))
             expect_operand = False
         elif s[index] in lr:
             operator_ch = s[index]
@@ -325,7 +329,7 @@ def calc(s: str):
         output.append(operator.pop())
     stack = []
     for token in output:
-        if isinstance(token, float):
+        if isinstance(token, float) or isinstance(token, int):
             stack.append(token)
         else:
             if token == '~':
