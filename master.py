@@ -820,14 +820,81 @@ def inner_append(order, kind: str):
         if name in d and isinstance(d[name], list):
             d[name].extend(t)
         else:
-            d[name] = t
+            v = get_variable(name, '[', ']')
+            if v:
+                want = name[:v[-1][0]].strip()
+                index = name[v[-1][0] + 1:v[-1][1] - 1].strip()
+                arr = replace_variable(want, get=True, keep=True)
+                if isinstance(arr, list) or isinstance(arr, dict):
+                    try:
+                        arr[index].extend(t)
+                    except:
+                        try:
+                            arr[int(index)].extend(t)
+                        except:
+                            l_r = special_split(index, ':')
+                            a = 0
+                            b = len(arr)
+                            if len(l_r) == 2:
+                                if l_r[0] != '':
+                                    a = int(l_r[0])
+                                if l_r[1] != '':
+                                    b = int(l_r[1])
+                            ok = True
+                            iterable = arr[a:b]
+                            for j in iterable:
+                                if not isinstance(j, list):
+                                    ok = False
+                                    break
+                            if not ok:
+                                raise TypeError(f'the iterable arr from index {a} to {b} not all list')
+                            for j in iterable:
+                                j.extend(t)
+            else:
+                d[name] = t
     elif kind == 'dict':
         t = [special_split(i, ':') for i in special_split(content, ',')]
         if name in d and isinstance(d[name], dict):
             for i in t:
                 d[name][i[0]] = i[1]
         else:
-            d[name] = {i[0]: i[1] for i in t}
+            v = get_variable(name, '[', ']')
+            if v:
+                want = name[:v[-1][0]].strip()
+                index = name[v[-1][0] + 1:v[-1][1] - 1].strip()
+                arr = replace_variable(want, get=True, keep=True)
+                if isinstance(arr, list) or isinstance(arr, dict):
+                    try:
+                        for i in t:
+                            arr[index][i[0]] = i[1]
+                    except:
+                        try:
+                            for i in t:
+                                arr[int(index)][i[0]] = i[1]
+                        except:
+                            l_r = special_split(index, ':')
+                            a = 0
+                            b = len(arr)
+                            if len(l_r) == 2:
+                                if l_r[0] != '':
+                                    a = int(l_r[0])
+                                if l_r[1] != '':
+                                    b = int(l_r[1])
+                            else:
+                                raise NameError(f'{index} is invalid key or index')
+                            ok = True
+                            iterable = arr[a:b]
+                            for j in iterable:
+                                if not isinstance(j, dict):
+                                    ok = False
+                                    break
+                            if not ok:
+                                raise TypeError(f'the iterable arr from index {a} to {b} not all dict')
+                            for j in iterable:
+                                for i in t:
+                                    j[i[0]] = i[1]
+            else:
+                d[name] = {i[0]: i[1] for i in t}
 
 
 def get_len(order):
