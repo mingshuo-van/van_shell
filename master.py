@@ -337,7 +337,7 @@ def calc(s: str):
                 stack.append(-cur)
             elif token == '!':
                 cur = stack.pop()
-                stack.append(float(not cur))
+                stack.append(int(not cur))
             else:
                 right = stack.pop()
                 left = stack.pop()
@@ -1116,7 +1116,7 @@ def parse_return(order):
     res = order[6:].strip()
     global has_res_flag
     has_res_flag = True
-    return_stack.append(replace_variable(res))
+    return_stack.append(res)
 
 
 def special_iter(order):
