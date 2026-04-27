@@ -12,12 +12,12 @@ return_stack = []
 macro_map = {}
 
 
-def my_str(object):
+def my_str(object, inner=0):
     if isinstance(object, dict):
-        res = {str(k): my_str(v) for k, v in object.items()}
-        return '\\\\' + str(res)
+        res = {str(k): my_str(v, 1) for k, v in object.items()}
+        return ('\\\\' + str(res)) if inner == 0 else ('\\' + str(res) if inner == 2 else str(res))
     elif isinstance(object, list):
-        res = [my_str(i) for i in object]
+        res = [my_str(i, 2) for i in object]
         return str(res)
     return str(object)
 
