@@ -243,6 +243,22 @@ echo {f<30,arr>}
 
 echo {f<100,arr>}
 
+echo 阿克曼函数
+
+macro ack<m,n>
+if({m}==0)
+return ({n}+1)
+endif
+if({n}==0)
+return {ack<({m}-1),1>}
+endif
+return {ack<({m}-1),{ack<{m},({n}-1)>}>}
+endmacro
+
+echo {ack<0,3>}
+
+echo {ack<3,2>}
+
 echo 在macro中嵌套定义并调用macro
 
 macro outer<content,key>
