@@ -190,12 +190,12 @@ def replace_variable_only(s: str, keep=False):
     return s
 
 
-prior = {'(': 0, ')': 0, '+': 1, '-': 1, '*': 2, '/': 2, '%': 2, '^': 0.64, '~': 4, '>': 0.7, '<': 0.7, '==': 0.69,
-         '<=': 0.7, '>=': 0.7, '&': 0.65, '|': 0.63, '!': 4, '&&': 0.6, '||': 0.5, '!=': 0.69, '**': 3}
+prior = {'(': 0, ')': 0, '+': 1, '-': 1, '*': 2, '/': 2, '%': 2, '^': 0.64, '_': 4, '>': 0.7, '<': 0.7, '==': 0.69,
+         '<=': 0.7, '>=': 0.7, '&': 0.65, '|': 0.63, '!': 4, '&&': 0.6, '||': 0.5, '!=': 0.69, '**': 3, '~': 4}
 
 lr = {'+': 'left', '-': 'left', '*': 'left', '/': 'left', '%': 'left', '^': 'left', '~': 'right', '>': 'left',
       '<': 'left', '==': 'left', '>=': 'left', '<=': 'left', '&': 'left', '|': 'left', '!': 'right',
-      '=': 'this is not a bug', '&&': 'left', '||': 'left', '!=': 'left', '**': 'right'}
+      '=': 'this is not a bug', '&&': 'left', '||': 'left', '!=': 'left', '**': 'right', '_': 'right'}
 
 
 def check_couple(left: str, right: str, s: str):
@@ -311,7 +311,7 @@ def calc(s: str):
             else:
                 op = operator[-1]
                 if expect_operand and s[index] == '-':
-                    ch = '~'
+                    ch = '_'
                 else:
                     ch = operator_ch
                     expect_operand = True
@@ -332,12 +332,15 @@ def calc(s: str):
         if isinstance(token, float) or isinstance(token, int):
             stack.append(token)
         else:
-            if token == '~':
+            if token == '_':
                 cur = stack.pop()
                 stack.append(-cur)
             elif token == '!':
                 cur = stack.pop()
                 stack.append(int(not cur))
+            elif token == '~':
+                cur = stack.pop()
+                stack.append(~cur)
             else:
                 right = stack.pop()
                 left = stack.pop()
