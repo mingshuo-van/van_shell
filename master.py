@@ -1038,13 +1038,15 @@ def run_macro(arr):
     global continue_flag
     save_old_macro_flag = in_macro
     save_old_record = record
+    save_old_return_flag = return_flag
+    return_flag = False
     jmp = 0
     for i in range(1, len(content) - 1):
         if jmp:
             jmp -= 1
             continue
         if return_flag:
-            return_flag = False
+            return_flag = save_old_return_flag
             break
         statement = content[i]
         if statement.startswith('macro') and statement.endswith('endmacro'):
@@ -1104,7 +1106,7 @@ def run_macro(arr):
         run(statement)
     call_stack.pop()
     in_macro = save_old_macro_flag
-    return_flag = False
+    return_flag = save_old_return_flag
     break_flag = False
     continue_flag = False
     record = save_old_record
