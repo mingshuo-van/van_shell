@@ -1257,9 +1257,6 @@ def haskey(order):
     s = order[6:].strip()
     name, key, var = s.split(maxsplit=3)
     d: dict = scope
-    print(name)
-    print(key)
-    print(var)
     global in_macro
     if in_macro:
         for target in reversed(call_stack):
@@ -1272,10 +1269,8 @@ def haskey(order):
         return
     map = replace_variable(name, get=True, keep=True)
     if isinstance(map, dict):
-        print('map')
         parse_set(f'set {var} bool {1 if key in map else 0}')
     else:
-        print('else')
         parse_set(f'set {var} bool {0}')
 
 
