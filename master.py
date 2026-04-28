@@ -26,11 +26,7 @@ def stackpop(order):
     _, var = order.split(maxsplit=1)
     if len(stack) == 0:
         raise ValueError('stack is empty')
-    global in_macro
-    d = scope
-    if in_macro:
-        d = call_stack[-1]
-    d[var] = stack.pop()
+    parse_set(f'set {var} int 0', origin=True, val=stack.pop())
 
 
 def stackpush(order):
@@ -450,6 +446,7 @@ def get_bool(s: str):
     try:
         s = int(s)
     except:
+        s = 1 if s == 'True' else (0 if s == 'False' else s)
         return bool(s)
     return bool(s)
 
@@ -457,7 +454,7 @@ def get_bool(s: str):
 cast = {'int': int, 'float': float, 'str': str, 'dict': get_dict, 'list': get_list, 'bool': get_bool}
 
 
-def parse_set(order: str):
+def parse_set(order: str, origin=False, val=None):
     global scope
     global in_macro
     order = order.split(maxsplit=3)
@@ -501,21 +498,29 @@ def parse_set(order: str):
                         raise KeyError(f'{order[1][start + 1:end]} not a usable index')
         try:
             d[order[1][left_idx + 1:right_idx]] = cast[order[2]](order[3])
+            if origin:
+                d[order[1][left_idx + 1:right_idx]] = val
         except:
             try:
                 d[int(order[1][left_idx + 1:right_idx])] = cast[order[2]](order[3])
+                if origin:
+                    d[int(order[1][left_idx + 1:right_idx])] = val
             except:
                 try:
                     a, b = special_split(order[1][left_idx + 1:right_idx], ':')
                     a = 0 if a == '' else int(a)
                     b = len(d) if b == '' else int(b)
                     d[int(a):int(b)] = cast[order[2]](order[3])
+                    if origin:
+                        d[int(a):int(b)] = val
                 except:
                     raise KeyError(f'{order[1][left_idx + 1:right_idx]} not a usable index')
     else:
         if in_macro:
             d = call_stack[-1]
         d[order[1]] = cast[order[2]](order[3])
+        if origin:
+            d[order[1]] = val
 
 
 def push(order):
@@ -930,9 +935,9 @@ def get_len(order):
     if origin not in d:
         raise ValueError(f'{origin} is not a variable')
     if isinstance(d[origin], list) or isinstance(d[origin], dict) or isinstance(d[origin], str):
-        d[res] = len(d[origin])
+        parse_set(f'set {res} int {len(d[origin])}')
     else:
-        d[res] = 1
+        parse_set(f'set {res} int 1')
 
 
 def declare_macro(work):
@@ -1125,15 +1130,11 @@ def parse_return(order):
 def special_iter(order):
     source = order[4:].strip()
     global in_macro
-    d: dict = scope
-    if in_macro:
-        for t in reversed(call_stack):
-            if source in t:
-                d = t
-                break
-    if source not in d or not isinstance(d[source], dict):
+    d: dict = scope if not in_macro else call_stack[-1]
+    target = replace_variable(source, get=True, keep=True)
+    if not isinstance(target, dict):
         raise ValueError(f'{source} not a dict')
-    d['_iter_arr'] = [(k, v) for k, v in d[source].items()]
+    d['_iter_arr'] = [(k, v) for k, v in target.items()]
     d['_iter_arr_index'] = 0
     d['_key'] = d['_iter_arr'][0][0]
     d['_val'] = d['_iter_arr'][0][1]
@@ -1256,6 +1257,9 @@ def haskey(order):
     s = order[6:].strip()
     name, key, var = s.split(maxsplit=3)
     d: dict = scope
+    print(name)
+    print(key)
+    print(var)
     global in_macro
     if in_macro:
         for target in reversed(call_stack):
@@ -1264,15 +1268,15 @@ def haskey(order):
                 break
     if name in d and isinstance(d[name], dict):
         res = key in d[name]
-        d = scope if not in_macro else call_stack[-1]
-        d[var] = res
+        parse_set(f'set {var} bool {1 if res else 0}')
         return
     map = replace_variable(name, get=True, keep=True)
-    d = scope if not in_macro else call_stack[-1]
     if isinstance(map, dict):
-        d[var] = key in map
+        print('map')
+        parse_set(f'set {var} bool {1 if key in map else 0}')
     else:
-        d[var] = False
+        print('else')
+        parse_set(f'set {var} bool {0}')
 
 
 def search(name, d):
