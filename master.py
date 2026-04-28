@@ -1442,7 +1442,7 @@ def run(order):
         try:
             order = replace_variable(order)
         except Exception as e:
-            print('error')
+            print(f'error,when command {order},because {str(e)}')
             raise e
     if order == '':
         return
@@ -1541,9 +1541,8 @@ while True:
         order = ''
         record = imp_re.pop()
         in_import = imp_flags.pop()
-    except Exception as e:
+    except Exception:
         print('please enter help to get using assistance')
-        print(my_str(e))
         record = True
         break_flag = False
         continue_flag = False
@@ -1553,3 +1552,5 @@ while True:
         return_flag = False
         in_macro = False
         sys.stdin = sys.__stdin__
+        imp_re = []
+        imp_flags = []
