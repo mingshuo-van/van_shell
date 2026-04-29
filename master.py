@@ -925,17 +925,51 @@ def inner_append(order, kind: str):
 def get_len(order):
     s = order[3:].strip()
     origin, res = s.split(maxsplit=1)
+    v = get_variable(origin, '[', ']')
     d: dict = scope
     global in_macro
+    name = origin
+    idx = origin
+    if v:
+        name = origin[:v[-1][0]]
+        idx = origin[v[-1][0] + 1:v[-1][1] - 1]
+    get = False
     if in_macro:
         for target in reversed(call_stack):
-            if origin in target:
+            if v:
+                g, t = search(name, target)
+                if g:
+                    d = t
+                    get = True
+                    break
+            elif origin in target:
                 d = target
+                get = True
                 break
-    if origin not in d:
-        raise ValueError(f'{origin} is not a variable')
-    if isinstance(d[origin], list) or isinstance(d[origin], dict) or isinstance(d[origin], str):
-        parse_set(f'set {res} int {len(d[origin])}')
+    if not get:
+        if v:
+            g, t = search(name, scope)
+            if g:
+                d = t
+    try:
+        out = d[idx]
+    except:
+        try:
+            out = d[int(idx)]
+        except:
+            try:
+                a = None
+                b = None
+                arr = special_split(idx, ':')
+                if len(arr) == 2:
+                    a = int(arr[0]) if arr[0] != '' else a
+                    b = int(arr[1]) if arr[1] != '' else b
+                out = d[a:b]
+            except:
+                raise ValueError(f'{origin} is not a variable')
+
+    if isinstance(out, list) or isinstance(out, dict) or isinstance(out, str):
+        parse_set(f'set {res} int {len(out)}')
     else:
         parse_set(f'set {res} int 1')
 
@@ -1286,16 +1320,35 @@ def search(name, d):
         try:
             d = d[int(s)]
         except:
-            return False, 0
+            try:
+                a = None
+                b = None
+                arr = special_split(s, ':')
+                if len(arr) == 2:
+                    a = int(arr[0]) if arr[0] != '' else a
+                    b = int(arr[1]) if arr[1] != '' else b
+                d = d[a:b]
+            except:
+                return False, 0
     for s, e in v:
         key = name[s + 1:e - 1]
-        if key in d:
+        try:
             d = d[key]
-        else:
+        except:
             try:
                 d = d[int(key)]
             except:
-                return False, 0
+                try:
+                    a = None
+                    b = None
+                    arr = special_split(key, ':')
+                    if len(arr) == 2:
+                        a = int(arr[0]) if arr[0] != '' else a
+                        b = int(arr[1]) if arr[1] != '' else b
+                    d = d[a:b]
+                except:
+                    return False, 0
+
     return True, d
 
 
