@@ -459,11 +459,7 @@ def get_bool(s: str):
     return bool(s)
 
 
-def get_str(s: str):
-    return strip_quotes(s)
-
-
-cast = {'int': int, 'float': float, 'str': get_str, 'dict': get_dict, 'list': get_list, 'bool': get_bool}
+cast = {'int': int, 'float': float, 'str': str, 'dict': get_dict, 'list': get_list, 'bool': get_bool}
 
 
 def parse_set(order: str, origin=False, val=None):
