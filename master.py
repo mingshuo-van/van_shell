@@ -12,6 +12,14 @@ return_stack = []
 macro_map = {}
 
 
+def strip_quotes(address: str):
+    if address.startswith('\"') and address.endswith('\"'):
+        return address[1:-1].strip()
+    if address.startswith('\'') and address.endswith('\''):
+        return address[1:-1].strip()
+    return address
+
+
 def my_str(object, inner=0):
     if isinstance(object, dict):
         res = {str(k): my_str(v, 1) for k, v in object.items()}
@@ -451,7 +459,11 @@ def get_bool(s: str):
     return bool(s)
 
 
-cast = {'int': int, 'float': float, 'str': str, 'dict': get_dict, 'list': get_list, 'bool': get_bool}
+def get_str(s: str):
+    return strip_quotes(s)
+
+
+cast = {'int': int, 'float': float, 'str': get_str, 'dict': get_dict, 'list': get_list, 'bool': get_bool}
 
 
 def parse_set(order: str, origin=False, val=None):
@@ -1203,7 +1215,7 @@ in_import = False
 def import_file(order):
     address = order[6:].strip()
     stdin.append(sys.stdin)
-    f = open(address, 'r', encoding='utf8')
+    f = open(strip_quotes(address), 'r', encoding='utf8')
     global record
     imp_re.append(record)
     global in_import
