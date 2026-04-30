@@ -12,6 +12,23 @@ return_stack = []
 macro_map = {}
 
 
+def get_inner_index(d, index):
+    try:
+        res = d[index]
+    except:
+        try:
+            res = d[int(index)]
+        except:
+            try:
+                a, b = special_split(index, ':')
+                a = None if a == '' else int(a)
+                b = None if b == '' else int(b)
+                res = d[a:b]
+            except:
+                return None
+    return res
+
+
 def strip_quotes(address: str):
     if address.startswith('\"') and address.endswith('\"'):
         return address[1:-1].strip()
@@ -142,38 +159,16 @@ def replace_variable_only(s: str, keep=False):
                     d = target[s[:left]]
                     break
         index = s[left + 1:right]
-        try:
-            res = d[index]
-        except:
-            try:
-                res = d[int(index)]
-            except:
-                try:
-                    a, b = special_split(index, ':')
-                    a = 0 if a == '' else int(a)
-                    b = len(d) if b == '' else int(b)
-                    res = d[int(a):int(b)]
-                except:
-                    res = s
-                    return res
+        res = get_inner_index(d, index)
+        if not res:
+            return s
         left_arr = left_arr[1:]
         right_arr = right_arr[1:]
         for left, right in zip(left_arr, right_arr):
             index = s[left + 1:right]
-            try:
-                res = res[index]
-            except:
-                try:
-                    res = res[int(index)]
-                except:
-                    try:
-                        a, b = special_split(index, ':')
-                        a = 0 if a == '' else int(a)
-                        b = len(res) if b == '' else int(b)
-                        res = res[int(a):int(b)]
-                    except:
-                        res = s
-                        return my_str(res)
+            res = get_inner_index(res, index)
+            if not res:
+                return s
         if keep:
             return res
         return transform(my_str(res)) if (isinstance(res, dict) or isinstance(res, list)) else my_str(res)
@@ -959,22 +954,9 @@ def get_len(order):
             g, t = search(name, scope)
             if g:
                 d = t
-    try:
-        out = d[idx]
-    except:
-        try:
-            out = d[int(idx)]
-        except:
-            try:
-                a = None
-                b = None
-                arr = special_split(idx, ':')
-                if len(arr) == 2:
-                    a = int(arr[0]) if arr[0] != '' else a
-                    b = int(arr[1]) if arr[1] != '' else b
-                out = d[a:b]
-            except:
-                raise ValueError(f'{origin} is not a variable')
+    out = get_inner_index(d, idx)
+    if not out:
+        raise ValueError(f'{origin} is not a variable')
 
     if isinstance(out, list) or isinstance(out, dict) or isinstance(out, str):
         parse_set(f'set {res} int {len(out)}')
@@ -1322,41 +1304,14 @@ def search(name, d):
         s = name
     else:
         s = name[:v[0][0]]
-    if s in d:
-        d = d[s]
-    else:
-        try:
-            d = d[int(s)]
-        except:
-            try:
-                a = None
-                b = None
-                arr = special_split(s, ':')
-                if len(arr) == 2:
-                    a = int(arr[0]) if arr[0] != '' else a
-                    b = int(arr[1]) if arr[1] != '' else b
-                d = d[a:b]
-            except:
-                return False, 0
+    d = get_inner_index(d, s)
+    if not d:
+        return False, 0
     for s, e in v:
         key = name[s + 1:e - 1]
-        try:
-            d = d[key]
-        except:
-            try:
-                d = d[int(key)]
-            except:
-                try:
-                    a = None
-                    b = None
-                    arr = special_split(key, ':')
-                    if len(arr) == 2:
-                        a = int(arr[0]) if arr[0] != '' else a
-                        b = int(arr[1]) if arr[1] != '' else b
-                    d = d[a:b]
-                except:
-                    return False, 0
-
+        d = get_inner_index(d, key)
+        if not d:
+            return False, 0
     return True, d
 
 
