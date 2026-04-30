@@ -2,6 +2,7 @@ import os
 import sys
 
 sys.setrecursionlimit(10000)
+sys.set_int_max_str_digits(0)
 import helpFile
 
 work_dir = ''
